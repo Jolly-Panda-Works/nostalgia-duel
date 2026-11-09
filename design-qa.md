@@ -98,3 +98,7 @@ Removed back/ready controls and game configuration from profile; round/capacity 
 ## Friends moved into animated bottom tabs
 
 Moved the header friends action and notification badge into a fifth bottom tab. Friends/requests/invitations render as an inline panel; the same live component can mount in a room dialog for inviting without leaving an active room. Five tabs use a sliding selection surface and a short directional fade/slide on content entry. Rapid changes cancel the incoming panel’s previous animation; reduced-motion skips movement. Seven viewport sizes, keyboard navigation, profile preservation, requests/invite/join and return from the room dialog passed browser checks.
+
+## Brief corner feedback after hand reveal
+
+Round feedback moved out of the arena into a compact upper-corner lane, so it never covers forearms or gestures. It waits 550 ms for the throw/flip, then fades in and out over one second and is removed after 1550 ms. Re-rendering the same round retains its original timing. The final hand remains visible for 1.6 seconds before the match-result screen. Seven-size browser tests check delay, disappearance, no arena intersection and final-hand visibility. Reviewed corner-round-effect-390.png.
