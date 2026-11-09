@@ -4,7 +4,7 @@ Independent web + Android game based on the studio's `game-template` build contr
 
 ## اجرا
 
-Node 22.12+ and Java 21 for native builds. `npm ci`, `npm run dev` then open the URL shown by Vite. `START-GAME.cmd` is a dependency-free local server at http://127.0.0.1:4175. `npm test` runs logic and pipeline tests; `npm run test:browser` tests the real browser with Chrome installed. `npm run build` creates the relative-path web bundle in dist.
+Node 22.12+ and Java 21 for native builds. `npm ci`, `npm run dev` then open the URL shown by Vite. `START-GAME.cmd` opens a standalone HTML game without a local server; after `npm run build`, `node scripts/standalone.mjs` produces out/play.html, which can be opened directly in Chrome. `node scripts/test-standalone.mjs` verifies direct-file launch. The optional development server remains at http://127.0.0.1:4175 via `node server.mjs`. `npm test` runs logic and pipeline tests; `npm run test:browser` tests the real browser with Chrome installed. `npm run build` creates the relative-path web bundle in dist.
 
 ## بازی‌ها
 
