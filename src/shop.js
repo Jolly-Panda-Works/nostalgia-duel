@@ -1,3 +1,4 @@
+import {themedIcon} from './icons.js';
 import QRCode from 'qrcode';
 import {fa} from './core.js';
 const $=id=>document.getElementById(id);
@@ -9,7 +10,7 @@ export function setupShop({getFriends,escape}){
  function draw(){
   if(!catalog)return;
   $('shop-networks').innerHTML=catalog.networks.map(n=>`<button data-shop-network="${n.id}" aria-pressed="${network===n.id}" ${busy?'disabled':''}>${n.ticker}</button>`).join('');
-  $('shop-packages').innerHTML=catalog.packs.map((p,i)=>`<button class="coin-pack" data-shop-pack="${p.id}" ${busy?'disabled':''}><span class="coin-emblem" aria-hidden="true">${['◉','▣','♜'][i]}</span><b>${fa(p.coins)} سکه</b><span>${p.name}</span><strong dir="ltr">${p.prices[network]} ${catalog.networks.find(n=>n.id===network).ticker}</strong><small>قیمت پایه + مبلغ شناسایی فاکتور</small></button>`).join('');
+  $('shop-packages').innerHTML=catalog.packs.map((p,i)=>`<button class="coin-pack" data-shop-pack="${p.id}" ${busy?'disabled':''}><span class="coin-emblem" aria-hidden="true">${themedIcon(['pouch','chest','treasure'][i])}</span><b>${fa(p.coins)} سکه</b><span>${p.name}</span><strong dir="ltr">${p.prices[network]} ${catalog.networks.find(n=>n.id===network).ticker}</strong><small>قیمت پایه + مبلغ شناسایی فاکتور</small></button>`).join('');
   $('shop-history').innerHTML=catalog.orders.map(o=>`<button data-shop-order="${o.id}" class="shop-order-row"><b>${fa(o.coins)} سکه</b><span>${o.networkName} · ${o.amount} ${o.ticker}</span><strong>${o.status==='paid'?'✓ واریز شد':Date.now()>o.expires?'زمان پرداخت تمام شد':o.status==='pending'?'در حال تأیید':'ادامهٔ پرداخت'}</strong></button>`).join('')||'<p>هنوز خریدی نداری.</p>';
  }
  async function refresh(){catalog=await request();wallet(catalog.wallet);draw();}

@@ -1,3 +1,4 @@
+import {themedIcon} from './icons.js';
 import {setupShop} from './shop.js';
 import {arenasFor} from './arenas.js';
 import {setupProfile} from './profile.js';
@@ -8,18 +9,7 @@ import {modeLabels,fa,cleanSave,defaultNames} from './core.js';
 import {native,load,persist} from './platform.js';
 import {setupOnline} from './online.js';
 import {fitWebViewport} from './viewport.js';
-import sword from '@phosphor-icons/core/assets/duotone/sword-duotone.svg';
-import users from '@phosphor-icons/core/assets/duotone/users-three-duotone.svg';
-import trophy from '@phosphor-icons/core/assets/duotone/trophy-duotone.svg';
-import house from '@phosphor-icons/core/assets/duotone/house-duotone.svg';
-import book from '@phosphor-icons/core/assets/duotone/book-open-duotone.svg';
-import flower from '@phosphor-icons/core/assets/duotone/flower-lotus-duotone.svg';
-import sliders from '@phosphor-icons/core/assets/duotone/sliders-horizontal-duotone.svg';
-import playIcon from '@phosphor-icons/core/assets/duotone/play-duotone.svg';
-import pauseIcon from '@phosphor-icons/core/assets/duotone/pause-duotone.svg';
-import arrow from '@phosphor-icons/core/assets/duotone/arrow-right-duotone.svg';
-const iconAssets={'sword':sword,'users-three':users,'trophy':trophy,'house':house,'book-open':book,'flower-lotus':flower,'sliders-horizontal':sliders,'play':playIcon,'pause':pauseIcon,'arrow-right':arrow};
-document.querySelectorAll('[data-icon]').forEach(el=>el.src=iconAssets[el.dataset.icon]);
+document.querySelectorAll('[data-icon]').forEach(el=>{el.outerHTML=themedIcon(el.dataset.icon,el.getAttribute('class')||'ui-icon');});
 const $=id=>document.getElementById(id),escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 window.addEventListener('wallet-update',e=>{if(!e.detail)return;$('wallet-coins').textContent=fa(e.detail.coins);$('wallet-xp').textContent=fa(e.detail.xp);});
