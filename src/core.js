@@ -1,4 +1,5 @@
 export const moves=['rock','paper','scissors'];
+export const defaultNames=['آرش','ترانه','سامان','رها','نیما','مهتاب','باران','پویا'];
 export const icons={rock:'✊',paper:'✋',scissors:'✌️',palm:'✋',back:'🤚'};
 export const labels={rock:'سنگ',paper:'کاغذ',scissors:'قیچی',palm:'کف دست',back:'پشت دست'};
 export const avatars=[{id:'red',name:'کلاه قرمزی',color:'#eb755c'},{id:'zizi',name:'زی‌زی‌گولو',color:'#a58ac8'},{id:'pesar',name:'پسرخاله',color:'#e0b65e'},{id:'guest',name:'مهمان دورهمی',color:'#78aaa5'}];

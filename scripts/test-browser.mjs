@@ -32,7 +32,7 @@ try{
     await page.locator('#next').waitFor({state:'visible'});await page.locator('#next').click();
   }
   await page.locator('#result').waitFor({state:'visible'});
-  assert.match(await page.locator('#result-title').innerText(),/بازیکن ۱/);
+  assert.match(await page.locator('#result-title').innerText(),/آرش/);
   assert.match(await page.locator('#save-status').innerText(),/ذخیره شد/);
   assert.equal(await page.locator('#battle-log p').count(),3);
   await page.screenshot({path:'out/qa/result-desktop.png',fullPage:true});
@@ -44,10 +44,10 @@ try{
   await page.locator('#start').click();await ready();await page.locator('[data-move=back]').click();
   assert.equal(await page.locator('#choices').isVisible(),false);assert.equal(await page.locator('.hand').first().innerText(),'؟');
   await ready();await page.locator('[data-move=palm]').click();await page.locator('#next').waitFor({state:'visible'});
-  assert.match(await page.locator('#round-result').innerText(),/بازیکن ۱ تک شد/);
+  assert.match(await page.locator('#round-result').innerText(),/آرش تک شد/);
   await page.screenshot({path:'out/qa/party-desktop.png',fullPage:true});
   await page.locator('#next').click();await ready();await page.locator('[data-move=scissors]').click();await page.locator('#next').waitFor({state:'visible'});await page.locator('#next').click();
-  await page.locator('#result').waitFor({state:'visible'});assert.match(await page.locator('#result-title').innerText(),/بازیکن ۲/);
+  await page.locator('#result').waitFor({state:'visible'});assert.match(await page.locator('#result-title').innerText(),/ترانه/);
   await page.locator('.back-home').first().click();await page.setViewportSize({width:390,height:844});
   await page.screenshot({path:'out/qa/home-mobile.png',fullPage:true});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);

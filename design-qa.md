@@ -41,4 +41,8 @@ Chrome rendered both the built web page and server-free HTML. Tested mode select
 - [x] Mobile navigation overlap corrected and recaptured.
 - [x] Full primary flows and console checked.
 - [x] Standalone output embeds painting, icons and Mikhak without external downloads.
-- [x] No hosting, payment, signing credentials or release publishing activated.
+- [x] No public hosting, payment, signing credentials or release publishing activated.
+
+## LAN multiplayer follow-up
+
+The subsequent functional update adds real Colyseus guest rooms. Default names are now آرش، ترانه، سامان، رها، نیما، مهتاب، باران، پویا. The miniature visual system is retained. Online evidence is in out/qa/online-lobby-mobile.png, online-result-mobile.png, online-party-mobile.png and online-eight-mobile.png. These were opened and reviewed at a 390×844 CSS viewport: no horizontal overflow or blocked primary controls. Independent browser sessions tested create/join, host start after all ready, secret choices, shared winner, rematch, reload/reconnection and mixed human/bot party. Local play and server-free HTML still pass their browser checks. Only LAN hosting is in scope; public internet access and an APK device test remain unverified.

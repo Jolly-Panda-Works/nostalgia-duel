@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
 import path from 'node:path';
 let html=await readFile('dist/index.html','utf8');
 const script=html.match(/<script\b[^>]*src="([^"]+)"[^>]*><\/script>/);
@@ -16,6 +16,7 @@ for(const asset of [...html.matchAll(/<img\b[^>]*src="([^"\s]+\.(?:webp|png|jpe?
   const file=path.resolve('dist',asset[1]);const data=await readFile(file);html=html.replace(asset[0],()=>asset[0].replace(asset[1],`data:${mime[path.extname(file)]};base64,${data.toString('base64')}`));
 }
 html=html.replace(script[0],()=>'<script type="module">'+js.replace(/<\/script/gi,'<\\/script')+'</script>').replace(style[0],()=>'<style>'+css+'</style>');
-const iconLicense=await readFile('public/licenses/phosphor-icons-LICENSE.txt','utf8');
-html=html.replace('</head>',()=>`<!-- Phosphor icon license\n${iconLicense.replaceAll('--','—')}\n--></head>`);
+const notices=[];
+for(const name of await readdir('public/licenses'))if(name.endsWith('.txt'))notices.push(name+'\n'+await readFile('public/licenses/'+name,'utf8'));
+html=html.replace('</head>',()=>`<!-- Third-party licenses\n${notices.join('\n\n').replaceAll('--','—')}\n--></head>`);
 await mkdir('out',{recursive:true});await writeFile('out/play.html',html);console.log('Standalone game: out/play.html (no server needed)');

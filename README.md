@@ -1,6 +1,10 @@
 # Nostalgia Duel / دوئل نوستالژی
 
-Independent web + Android game based on the studio's `game-template` build contract. No YouTube SDK, account, network score API, cloud save, or YouTube publishing dependency. Android uses Capacitor with portrait orientation; desktop web uses the wide table layout and small screens use the compact portrait layout.
+Independent web + Android game based on the studio's `game-template` build contract. Local/offline play plus Colyseus guest rooms for LAN multiplayer. No YouTube dependency, cloud accounts or global leaderboard. Android uses Capacitor with portrait orientation; desktop web uses the wide table layout and small screens use the compact portrait layout.
+
+## آنلاین و نام بازیکن‌ها
+
+نام‌های پیش‌فرض: آرش، ترانه، سامان، رها، نیما، مهتاب، باران و پویا؛ همه قابل تغییرند. برای شبکهٔ داخلی `START-ONLINE.cmd` یا `npm run build` و سپس `npm run start:online` را اجرا کنید. صفحهٔ بازی روی پورت 2567 است؛ دوستان با کد اتاق از دستگاه‌های مستقل وارد می‌شوند. [راهنمای کامل LAN و Colyseus](docs/ONLINE.fa.md) شامل اتصال گوشی، بازیابی اتصال، قواعد سرور و تست‌هاست. اینترنت عمومی راه‌اندازی نشده است.
 
 ## اجرا
 
@@ -12,7 +16,7 @@ Node 22.12+ and Java 21 for native builds. `npm ci`, `npm run dev` then open the
 
 - سنگ کاغذ قیچی: دو بازیکن، انسانی یا انسان با کامپیوتر؛ ۱/۳/۵/۷/۹ دور غیرمساوی قابل تنظیم. تساوی تکرار می‌شود و هرگز یک دور مصرف نمی‌کند. بیشترین برد پس از دورهای تعیین‌شده قهرمان است.
 - پلم پولوم پلیچ: ۳ تا ۸ بازیکن با ترکیب انسان و کامپیوتر. انتخاب کف/پشت دست؛ فقط بازیکن تک حذف می‌شود. اگر تک نداشته باشیم، همان جمع دوباره بازی می‌کند. دو نفر آخر یک دست تعیین‌کنندهٔ سنگ کاغذ قیچی دارند؛ تساوی تکرار می‌شود.
-- انتخاب‌های انسانی روی یک دستگاه مخفی و نوبتی‌اند و بعد از انتخاب همه، هم‌زمان رو می‌شوند. این نسخه مولتی‌پلیر آنلاین نیست. کامپیوترها پیش از انتخاب انسان‌ها دست تصادفی مستقل ثبت می‌کنند.
+- انتخاب‌های انسانی در حالت محلی، روی یک دستگاه مخفی و نوبتی‌اند. در حالت آنلاین هر نفر از دستگاه خودش انتخاب می‌کند و سرور Colyseus حرکت‌ها را تا روشدن همگانی مخفی نگه می‌دارد. کامپیوترها پیش از انتخاب انسان‌ها دست تصادفی مستقل ثبت می‌کنند.
 - صحنه فقط دست و آستین دارد، همراه آواتار کوچک کنار نام. آواتارها CSS موقت‌اند، فاقد تصویر اصلی شخصیت‌ها. چهره‌های مجاز و انیمیشن نهایی پس از تست اضافه می‌شوند.
 - رکوردهای محلی دو حالت جدا هستند؛ امتیاز سنگ‌کاغذقیچی و جام‌های دورهمی مستقیماً مقایسه نمی‌شوند. رکوردهای دوئل تعداد دور مسابقه را نیز نمایش می‌دهند. تبلیغ، پرداخت و تله‌متری فعلاً خاموش‌اند.
 
