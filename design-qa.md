@@ -74,3 +74,7 @@ Removed the offline game controller, local match/result screens and shared-devic
 ## Persistent bottom tabs
 
 The four bottom actions are now real tab/tabpanel navigation. Profile/settings and the illustrated guide render inline in the main content area instead of dialogs. The tab bar is fixed near the bottom edge, above the compact studio footer; content fitting reserves its footprint and safe-area offset. The home artwork expands into the available central space. Reviewed tabs-home-1920.png and tabs-guide-390.png. Seven-size tests check selected state, keyboard navigation, retained profile input, no dialogs for tabs, no overlap with the dock and no scrolling. Online matches still hide the lobby tab bar.
+
+## Hand collision fix
+
+Arm size now derives from the table container width/height instead of viewport width, with smaller sizes for 3–4 and 5–8 seats. Space remains between opposing fingertips during idle, throw and flip animations. scripts/test-hand-spacing.mjs composites the actual alpha masks at animation samples and checks 2–8 seats, all seven playable poses and six viewport sizes. No visible alpha overlap was found. Reviewed hand-spacing-2-1366.png and hand-spacing-8-390.png.
