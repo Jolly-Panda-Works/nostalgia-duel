@@ -30,6 +30,14 @@ jobs:
       - run: npm run build:android
         env:
           STORE: debug
+      - name: Validate Android identity and portrait orientation
+        run: |
+          APK=$(find out -name '*.apk' -print -quit)
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | tee out/android-badging.txt
+          grep -q "package: name='com.jollypanda.nostalgiaduel.debug'" out/android-badging.txt
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump xmltree "$APK" AndroidManifest.xml > out/android-manifest.txt
+          grep -q 'screenOrientation.*0x1' out/android-manifest.txt
       - uses: actions/upload-artifact@v4
         with:
           name: nostalgia-duel-prototype

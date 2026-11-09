@@ -4,7 +4,7 @@ Independent web + Android game based on the studio's `game-template` build contr
 
 ## اجرا
 
-Node 22.12+ and Java 21 for native builds. `npm ci`, `npm run dev` then open the URL shown by Vite. `START-GAME.cmd` is a dependency-free local server at http://127.0.0.1:4173. `npm test` runs logic and pipeline tests; `npm run test:browser` tests the real browser with Chrome installed. `npm run build` creates the relative-path web bundle in dist.
+Node 22.12+ and Java 21 for native builds. `npm ci`, `npm run dev` then open the URL shown by Vite. `START-GAME.cmd` is a dependency-free local server at http://127.0.0.1:4175. `npm test` runs logic and pipeline tests; `npm run test:browser` tests the real browser with Chrome installed. `npm run build` creates the relative-path web bundle in dist.
 
 ## بازی‌ها
 
@@ -16,12 +16,13 @@ Node 22.12+ and Java 21 for native builds. `npm ci`, `npm run dev` then open the
 
 ## Android / CI
 
-App id: `com.jollypanda.nostalgia_duel`. `npm run android:prepare` creates/syncs ignored android/. `STORE=debug npm run build:android` (PowerShell: `$env:STORE='debug'; npm run build:android`) produces a standalone debug APK in out plus a web ZIP. Local Android SDK 36 required. Debug app id has `.debug` suffix; never submit debug APK to a store.
+App id: `com.jollypanda.nostalgiaduel` (slug: `nostalgiaduel`, repository: `nostalgia-duel`). `npm run android:prepare` creates/syncs ignored android/. `STORE=debug npm run build:android` (PowerShell: `$env:STORE='debug'; npm run build:android`) produces a standalone debug APK in out plus a web ZIP. Local Android SDK 36 required. Debug app id has `.debug` suffix; never submit debug APK to a store.
 
-`.github/workflows/prototype.yml` provides a manually triggered APK + web test build without release keys or store submission. Main release pipeline remains the template's central builder contract: main for development, Iranian-store for builds, web=true, separate Bazaar/Myket targets. Creating a repo does not automatically authorize the central builder GitHub App. Register/activate with the template's setup script only after access and permanent signing are configured. No publisher should be enabled for this prototype.
+`.github/workflows/prototype.yml` provides a manually triggered APK + web test build without release keys or store submission. It retains contents:read and artifact upload; no automated private Release delivery is enabled. Artifact storage is currently full. Per the owner's choice, only local web output is needed for now; no new workflow run, permanent signing key or central-builder activation is performed in this update. The workflow verifies debug package identity, APK signature and portrait orientation on a future run. Main release pipeline remains the template's central builder contract: main for development, Iranian-store for builds, web=true, separate Bazaar/Myket targets. Creating a repo does not automatically authorize the central builder GitHub App. When using setup later, pass --repo nostalgia-duel with --slug nostalgiaduel to preserve the selected identity. No publisher should be enabled for this prototype.
 
 ## درآمد و حقوق محتوا
 
 [برنامهٔ درآمدی فارسی](docs/MONETIZATION.fa.md): هستهٔ رایگان + بستهٔ تزئینی یک‌باره + آگهی اختیاری محدود؛ بدون برتری پولی. خروج از YouTube مجوز استفادهٔ تجاری از شخصیت‌ها، چهره‌ها و آواتارهای دیگران ایجاد نمی‌کند. برای استفادهٔ نهایی حقوق باید روشن باشند؛ تصاویر نمادین فعلی برای تست‌اند.
 
 The earlier YouTube prototype is retained in the original YouTube Playable Games folder as an archive; this repository is the active web/Android version.
+
