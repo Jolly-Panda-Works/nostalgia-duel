@@ -19,7 +19,7 @@ export async function startOnlineServer({port=Number(process.env.PORT||2567),hos
   }});
   server.define('nostalgia',socialRoom(GameRoom,social));
   server.define('quick_match',socialRoom(QuickMatchRoom,social)).filterBy(['mode','rounds','capacity']);
-  await server.listen(port,host);
+  await server.listen(port,host);const shopTimer=setInterval(()=>void social.shop.poll(),20000);shopTimer.unref();server.onShutdown(()=>clearInterval(shopTimer));
   return {server,social,port:transport.server.address().port};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){

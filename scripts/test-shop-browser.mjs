@@ -1,0 +1,15 @@
+import {chromium} from 'playwright-core';import assert from 'node:assert/strict';import {startOnlineServer} from '../online/server.mjs';import {mkdir} from 'node:fs/promises';
+const {server,port,social}=await startOnlineServer({port:0,host:'127.0.0.1'});let browser;let confirm=false;
+social.shop.reader={height:async()=>100,verify:async()=>({status:confirm?'confirmed':'pending',message:confirm?'پرداخت تأیید شد و سکه اضافه شد.':'در انتظار تأیید شبکه…'})};
+try{
+ browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});const p=await browser.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(`http://127.0.0.1:${port}`);await p.locator('#home').waitFor();await p.locator('#wallet-shop').click();await p.locator('[data-shop-pack=pouch]').waitFor();assert.equal(await p.locator('.coin-pack').count(),3);assert.equal(await p.locator('.lobby-nav [role=tab]').count(),6);
+ await p.locator('[data-shop-network=bitcoin]').click();await p.locator('[data-shop-pack=pouch]').click();await p.locator('#shop-invoice[open]').waitFor();await p.waitForFunction(()=>document.querySelector('#shop-qr').naturalWidth>0);assert.match(await p.locator('#shop-wallet-link').getAttribute('href'),/^bitcoin:bc1.*\?amount=/);
+ await mkdir('out/qa',{recursive:true});
+ for(const [width,height]of [[1920,1080],[1366,768],[1280,600],[1024,600],[800,600],[390,844],[360,640]]){
+  await p.setViewportSize({width,height});await p.waitForTimeout(90);for(const panel of ['invoice','shop']){
+   const selector=panel==='invoice'?'#shop-invoice':'#shop';const bad=await p.locator(selector+' button').evaluateAll(es=>es.filter(e=>e.checkVisibility()).filter(e=>{const b=e.getBoundingClientRect();return b.top<-.9||b.left<-.9||b.right>innerWidth+.9||b.bottom>innerHeight+.9;}).map(e=>e.id));assert.deepEqual(bad,[],`${panel} ${width}`);assert.equal(await p.evaluate(()=>document.documentElement.scrollHeight<=innerHeight),true);
+   if(width===390||width===1366)await p.screenshot({path:`out/qa/shop-${panel}-${width}.png`});if(panel==='invoice')await p.locator('#shop-close-invoice').click();
+  }await p.locator('[data-shop-order]').first().click();
+ }
+ await p.locator('#shop-tx').fill('2'.repeat(64));await p.locator('#shop-check').click();await p.getByText('در انتظار تأیید شبکه…',{exact:true}).waitFor();assert.equal([...social.users.values()][0].coins,300);confirm=true;await p.locator('#shop-check').click();await p.waitForFunction(()=>document.getElementById('wallet-coins').textContent==='۱٬۳۰۰');assert.equal([...social.users.values()][0].coins,1300);await p.locator('#shop-close-invoice').click();await p.reload();await p.locator('#nav-shop').click();await p.getByText('✓ واریز شد',{exact:true}).waitFor();await p.locator('[data-shop-order]').first().click();assert.equal(await p.locator('#shop-check').isDisabled(),true);assert.deepEqual(errors,[]);console.log('Shop UI passed: three packs/networks, amount QR, ownership, pending/confirmed credit, reload, history and seven no-scroll sizes.');
+}finally{await browser?.close();await server.gracefullyShutdown(false);}
