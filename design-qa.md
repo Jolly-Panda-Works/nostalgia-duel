@@ -62,3 +62,7 @@ Six transparent illustrated forearm sprites replace symbolic hands. The local pl
 ## Advanced five-gesture duel
 
 Added a third mode and separate records tab, while keeping party final duels classic. Two original transparent forearm sprites depict lizard and Spock. The five choices fit one row; all seven viewport sizes were checked with all controls on-screen. Browser tests cover local Spock key5, separate records, two independent quick-match clients, lizard beating Spock, and loaded hand images. Reviewed advanced-mobile.png and advanced-online-desktop.png.
+
+## Visual tutorial
+
+Replaced the prose-only help modal with four tabs: classic, advanced, party and getting started. The selected game mode opens by default. Interactive gesture nodes show outgoing win arrows and a short illustrated winning summary. Party examples show singleton elimination, no singleton and the final duel. Existing generated hand assets and code-native SVG arrows are reused; no external diagram graphics were copied. All outgoing edges, examples, mode default, Escape, pause-modal reset, keyboard tab navigation support and seven no-scroll viewport sizes were checked. Opened tutorial-advanced-390.png for visual review.

@@ -1,3 +1,4 @@
+import {setupTutorial} from './tutorial.js';
 import{avatars,availableMoves,modeLabels,icons,labels,fa,createMatch,resolve,cleanSave,defaultNames}from'./core.js';
 import{native,load,persist,bindLifecycle}from'./platform.js';
 import{setupOnline}from'./online.js';
@@ -53,7 +54,7 @@ function setup(){
   $('roster-page').textContent=`${fa(rosterPage+1)} / ${fa(Math.ceil(roster.length/4))}`;
   $('roster-prev').disabled=rosterPage===0;$('roster-next').disabled=(rosterPage+1)*4>=roster.length;
 }
-function modal(title,copy,exit=false){$('modal-title').textContent=title;$('modal-copy').textContent=copy;$('modal-exit').hidden=!exit;if(!$('modal').open)$('modal').showModal();}
+function modal(title,copy,exit=false){$('modal').classList.remove('tutorial-modal');if($('tutorial-view'))$('tutorial-view').hidden=true;$('modal-copy').hidden=false;$('modal-close').textContent='ادامه';$('modal-title').textContent=title;$('modal-copy').textContent=copy;$('modal-exit').hidden=!exit;if(!$('modal').open)$('modal').showModal();}
 function stopTimer(){if(timer){clearTimeout(timer);timer=0;remaining=Math.max(0,remaining-(performance.now()-started));}}
 function resumeTimer(){if(pending&&!paused){started=performance.now();timer=setTimeout(()=>{timer=0;const fn=pending;pending=null;fn();},remaining);}}
 function pause(){if(screen!=='game'||paused)return;paused=true;stopTimer();document.body.classList.add('paused');modal('یک نفس تازه کن','انتخاب‌ها حفظ شده‌اند؛ برای ادامه بزن.');}
@@ -101,7 +102,7 @@ $('roster').addEventListener('change',e=>{const i=e.target.dataset.bot;if(i!==un
 $('player-count').onchange=()=>{setup();updateLobby();};$('rps-opponent').onchange=()=>{setup();updateLobby();};$('start').onclick=start;$('again').onclick=start;$('scores').onclick=board;$('home-link').onclick=()=>screen==='game'?$('exit').click():home();$('reveal-controls').onclick=revealControls;
 $('next').onclick=()=>{if(paused||phase!=='resolved')return;if(match.winner!==null)finish();else{match.round++;beginRound();}};
 $('pause').onclick=pause;$('exit').onclick=()=>{pause();modal('خروج از مسابقه؟','مسابقهٔ ناتمام در رکوردها ثبت نمی‌شود. می‌توانی ادامه بدهی یا به خانه برگردی.',true);};$('modal-close').onclick=()=>{$('modal').close();paused=false;document.body.classList.remove('paused');resumeTimer();};$('modal-exit').onclick=home;$('modal').addEventListener('cancel',e=>{e.preventDefault();$('modal-close').click();});
-$('help').onclick=()=>modal('راهنمای بازی','سنگ کاغذ قیچی: تعداد دورها قابل تنظیم است. تساوی تکرار می‌شود؛ برنده کسی است که در پایان برد بیشتری دارد. برد ۱۰۰ امتیاز دارد، زنجیرهٔ برد پاداش دارد و قهرمانی ۲۰۰ امتیاز اضافه.\nپیشرفته: سنگ قیچی و مارمولک را می‌بَرد؛ کاغذ سنگ و اسپاک؛ قیچی کاغذ و مارمولک؛ مارمولک کاغذ و اسپاک؛ اسپاک سنگ و قیچی. تساوی تکرار می‌شود.\nپلم پولوم پلیچ: همه کف یا پشت دست می‌آورند. بازیکن تک حذف می‌شود؛ در غیر این صورت همان جمع تکرار می‌کند. دو نفر آخر یک دست سنگ کاغذ قیچی بازی می‌کنند و تساوی تکرار می‌شود.\nبازی انسانی روی یک دستگاه: انتخاب‌ها مخفی و نوبتی‌اند؛ پس از انتخاب همه، دست‌ها هم‌زمان نمایش داده می‌شوند.\nبرای شروع مسابقه، تا ۵ ثانیه حریف جست‌وجو می‌شود؛ در نبود حریف کافی، بازیکنان کامپیوتری جای خالی را پُر می‌کنند. هر نفر ۵ ثانیه برای انتخاب دارد؛ انتخاب ناتمام خودکار ثبت می‌شود.');
+$('help').onclick=setupTutorial({openModal:modal,getMode:()=>mode});
 document.addEventListener('keydown',e=>{if(e.repeat||document.querySelector('dialog[open]')||screen!=='game'||e.target.matches('input,select'))return;const i=['1','2','3','4','5'].indexOf(e.key);if(i>=0){e.preventDefault();choose((availableMoves(match.mode,match.players.filter(p=>p.active).length))[i]);}});
 $('configure').onclick=openSetup;$('nav-players').onclick=openSetup;$('close-setup').onclick=closeSetup;$('apply-setup').onclick=closeSetup;$('round-count').onchange=updateLobby;$('nav-home').onclick=home;
 Array.from($('player-count').options).forEach(option=>{const count=Number(option.value);option.value=String(count);option.textContent=fa(count);});
