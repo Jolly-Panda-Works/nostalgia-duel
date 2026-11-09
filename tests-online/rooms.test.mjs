@@ -21,10 +21,10 @@ test('live Colyseus rooms enforce authority, privacy, reconnection, party rules 
     const choosing=await wait(a,s=>s.stage==='choosing');await wait(b,s=>s.stage==='choosing');
     a.send('move',{move:'paper',round:999,matchId:choosing.matchId});move(a,choosing,'palm');await sleep(80);assert.equal((await wait(a,()=>true)).players[0].committed,false);
     move(a,choosing,'rock');move(a,choosing,'paper');
-    const hidden=await wait(b,s=>s.players[0].committed);assert.deepEqual(hidden.choices,{});assert.equal('selected' in hidden,false);
+    const hidden=await wait(b,s=>s.players[0].committed);assert.deepEqual(hidden.choices,{});assert.equal(hidden.roundResult,null);assert.equal('selected' in hidden,false);
     const reconnect=new Promise(resolve=>a.onReconnect.once(resolve));const oldSession=a.sessionId;void a.leave(false);await Promise.race([reconnect,sleep(6000).then(()=>{throw Error('Reconnect timed out');})]);
     a.send('sync');const restored=await wait(a,s=>s.stage==='choosing'&&s.players[0].committed);assert.equal(a.sessionId,oldSession);assert.deepEqual(restored.choices,{});
-    move(b,choosing,'scissors');const result=await wait(a,s=>s.stage==='finished');assert.equal(result.winner,0);assert.equal(result.choices[0],'rock');assert.equal(result.players[0].score,300);
+    move(b,choosing,'scissors');const result=await wait(a,s=>s.stage==='finished');assert.equal(result.winner,0);assert.equal(result.roundResult.winnerId,0);assert.equal(result.roundResult.points,100);assert.equal(result.roundResult.championBonus,200);assert.equal(result.choices[0],'rock');assert.equal(result.players[0].score,300);
     await assert.rejects(()=>client.joinById(a.roomId,{name:'نباید وارد شود'}));
     b.send('rematch');await sleep(80);assert.equal((await wait(a,()=>true)).stage,'finished');a.send('rematch');await wait(b,s=>s.stage==='lobby');
     await a.leave();const transferred=await wait(b,s=>s.members.length===1);assert.equal(transferred.host,true);

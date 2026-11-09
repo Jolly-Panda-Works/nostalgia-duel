@@ -62,7 +62,7 @@ export class GameRoom extends Room {
   }
   roundStart(){
     if(this.match.history.length>=250){this.reset('تعداد دست‌ها به سقف این جلسه رسید؛ یک مسابقهٔ تازه بسازید.');return;}
-    this.stage='choosing';this.notice='';this.selected={};this.revealed={};this.automatic=[];this.deadline=Date.now()+5000;
+    this.roundResult=null;this.stage='choosing';this.notice='';this.selected={};this.revealed={};this.automatic=[];this.deadline=Date.now()+5000;
     const available=availableMoves(this.mode,this.match.players.filter(p=>p.active).length);
     for(const p of this.match.players)if(p.active&&p.bot)this.selected[p.id]=this.botMove(available);
     this.resolveIfComplete();
@@ -71,7 +71,11 @@ export class GameRoom extends Room {
   botMove(available){return available[randomInt(available.length)];}
   resolveIfComplete(){
     if(this.stage!=='choosing'||!this.match.players.filter(p=>p.active).every(p=>Object.hasOwn(this.selected,p.id)))return;
-    const result=resolve(this.match,this.selected);this.revealed={...this.selected};this.notice=result.message+(this.automatic.length?' • انتخاب‌های ناتمام خودکار ثبت شدند.':'');
+    const before=this.match.players.map(p=>({wins:p.wins,score:p.score}));
+    const result=resolve(this.match,this.selected);
+    const scorer=this.match.players.find(p=>p.wins>before[p.id].wins);
+    const championBonus=scorer&&this.match.winner===scorer.id?200:0;
+    this.roundResult={round:this.match.round,winnerId:scorer?.id??null,eliminatedId:result.eliminated?.id??null,tie:!scorer&&!result.eliminated,points:scorer?scorer.score-before[scorer.id].score-championBonus:0,championBonus};this.revealed={...this.selected};this.notice=result.message+(this.automatic.length?' • انتخاب‌های ناتمام خودکار ثبت شدند.':'');
     this.stage=this.match.winner!==null?'finished':'reveal';this.deadline=this.stage==='reveal'?Date.now()+2200:0;
   }
   expireRound(){
@@ -100,7 +104,7 @@ export class GameRoom extends Room {
   snapshot(sessionId){
     const players=this.match?this.match.players.map(p=>({id:p.id,name:p.name,avatar:p.avatar,bot:p.bot,active:p.active,wins:p.wins,score:p.score,connected:p.bot||this.members.get(p.sessionId)?.connected===true,committed:Object.hasOwn(this.selected,p.id)})):[];
     const me=this.match?.players.find(p=>p.sessionId===sessionId);
-    return {roomId:this.roomId,selfId:me?.id??null,host:this.hostId===sessionId,mode:this.mode,capacity:this.capacity,rounds:this.rounds,fillBots:this.fillBots,quickMatch:this.quick,matchingDeadline:this.matchingDeadline,automatic:this.automatic,stage:this.stage,matchId:this.matchId,round:this.match?.round??0,deadline:this.deadline??0,serverTime:Date.now(),winner:this.match?.winner??null,notice:this.notice,members:[...this.members.values()].map(p=>({name:p.name,avatar:p.avatar,connected:p.connected,ready:p.ready,self:p.sessionId===sessionId,host:p.sessionId===this.hostId})),players,choices:this.stage==='reveal'||this.stage==='finished'?this.revealed:{}};
+    return {roomId:this.roomId,selfId:me?.id??null,host:this.hostId===sessionId,mode:this.mode,capacity:this.capacity,rounds:this.rounds,fillBots:this.fillBots,quickMatch:this.quick,matchingDeadline:this.matchingDeadline,automatic:this.automatic,stage:this.stage,matchId:this.matchId,round:this.match?.round??0,deadline:this.deadline??0,serverTime:Date.now(),winner:this.match?.winner??null,notice:this.notice,members:[...this.members.values()].map(p=>({name:p.name,avatar:p.avatar,connected:p.connected,ready:p.ready,self:p.sessionId===sessionId,host:p.sessionId===this.hostId})),players,roundResult:['reveal','finished'].includes(this.stage)?this.roundResult??null:null,choices:this.stage==='reveal'||this.stage==='finished'?this.revealed:{}};
   }
   sendSnapshot(client){client.send('snapshot',this.snapshot(client.sessionId));}
   publish(){this.lastPublished=Date.now();for(const client of this.clients)this.sendSnapshot(client);}

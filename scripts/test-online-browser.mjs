@@ -37,7 +37,7 @@ try{
   assert.equal(await a.locator('[data-online=start]').count(),1);
   await a.screenshot({path:'out/qa/online-lobby-desktop.png',fullPage:true});
   await b.screenshot({path:'out/qa/online-lobby-mobile.png',fullPage:true});
-  for(const p of [a,b]){await p.locator('#online-leave').click();await p.locator('#online-leave-confirm').click();await p.locator('#home').waitFor({state:'visible'});}
+  for(const p of [a,b]){if(await p.locator('#online-leave').isVisible())await p.locator('#online-leave').click();else{await p.locator('#match-settings').click();await p.locator('#match-exit').click();}await p.locator('#online-leave-confirm').click();await p.locator('#home').waitFor({state:'visible'});}
   await a.locator('[data-mode=party]').click();await a.locator('#configure').click();await a.locator('#player-count').selectOption('3');await a.locator('#apply-setup').click();await a.locator('#online-open').click();await a.locator('#online-fill-bots').check();await a.locator('#online-create').click();
   await a.waitForFunction(()=>document.getElementById('online-room-code').value.length===8);
   const partyCode=await a.locator('#online-room-code').inputValue();
@@ -46,7 +46,7 @@ try{
   await a.locator('[data-online-move=palm]').waitFor();await b.locator('[data-online-move=back]').waitFor();await a.locator('[data-online-move=palm]').click();await b.locator('[data-online-move=back]').click();
   await a.waitForFunction(()=>document.querySelectorAll('.online-table .is-eliminated').length===1);
   await b.screenshot({path:'out/qa/online-party-mobile.png',fullPage:true});assert.equal(await b.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-  for(const p of [a,b]){await p.locator('#online-leave').click();await p.locator('#online-leave-confirm').click();await p.locator('#home').waitFor({state:'visible'});}
+  for(const p of [a,b]){if(await p.locator('#online-leave').isVisible())await p.locator('#online-leave').click();else{await p.locator('#match-settings').click();await p.locator('#match-exit').click();}await p.locator('#online-leave-confirm').click();await p.locator('#home').waitFor({state:'visible'});}
   await a.setViewportSize({width:360,height:640});await a.locator('#configure').click();await a.locator('#player-count').selectOption('8');await a.locator('#apply-setup').click();await a.locator('#online-open').click();await a.locator('#online-fill-bots').uncheck();await a.locator('#online-create').click();await a.locator('[data-online=ready]').waitFor();
   const eightCode=await a.locator('#online-room-code').inputValue(),sdk=new Client(`http://127.0.0.1:${port}`);
   for(let i=0;i<7;i++){const guest=await sdk.joinById(eightCode,{name:`دوست ${i+1}`});guest.onMessage('snapshot',()=>{});guests.push(guest);guest.send('ready',true);}

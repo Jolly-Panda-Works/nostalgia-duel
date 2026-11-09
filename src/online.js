@@ -1,10 +1,12 @@
 import {Client} from '@colyseus/sdk';
 import {labels,availableMoves,modeLabels,fa} from './core.js';
 import {tabletop,choiceArt,handArt} from './hands.js';
+import {setupMatchFeedback} from './match-feedback.js';
 
 const $=id=>document.getElementById(id);
 export function setupOnline({getOptions,getIdentity=async()=>({}),onResult=()=>{},escape,portrait,showHome,showRoom}){
   let room=null,client=null,state=null,signature='',connecting=false,reconnecting=false,ownMove=null,choiceKey='';
+  const feedback=setupMatchFeedback();let receivedAt=performance.now(),effectKey='',tickKey='';
   const storageKey='nostalgia-online-seat';
   const configured=import.meta.env.VITE_COLYSEUS_URL;
   const host=location.protocol==='file:'||location.hostname==='localhost'? '127.0.0.1':location.hostname;
@@ -46,16 +48,17 @@ export function setupOnline({getOptions,getIdentity=async()=>({}),onResult=()=>{
   function attach(joined){
     joined.reconnection.minUptime=0;
     signature='';reconnecting=false;storeSeat();
-    joined.onMessage('snapshot',snapshot=>{if(room!==joined)return;const key=snapshot.matchId+':'+snapshot.round;if(key!==choiceKey){ownMove=null;choiceKey=key;}state=snapshot;if(state.stage==='finished')onResult(state);render();});
+    joined.onMessage('snapshot',snapshot=>{if(room!==joined)return;const key=snapshot.matchId+':'+snapshot.round;if(key!==choiceKey){ownMove=null;choiceKey=key;}state=snapshot;receivedAt=performance.now();if(state.stage==='finished')onResult(state);render();if(state.roundResult&&key!==effectKey){effectKey=key;feedback.play(state.roundResult.tie?'tie':state.roundResult.winnerId===state.selfId?'win':state.roundResult.winnerId!==null||state.roundResult.eliminatedId===state.selfId?'lose':'choose');}});
     joined.onDrop(()=>{if(room!==joined)return;reconnecting=true;signature='';render();});
     joined.onReconnect(()=>{if(room!==joined)return;reconnecting=false;signature='';storeSeat();joined.send('sync');});
-    joined.onLeave(()=>{if(room!==joined)return;room=null;forgetSeat();$('online-view').innerHTML='<div class="network-empty"><h2>اتصال اتاق پایان یافت</h2><p>برای بازی دوباره، به لابی برگرد و اتاق تازه‌ای بساز.</p><button data-online="leave" class="primary">برگشت به لابی</button></div>';});
+    joined.onLeave(()=>{if(room!==joined)return;room=null;state=null;document.body.classList.remove('in-match','round-urgent');forgetSeat();$('online-view').innerHTML='<div class="network-empty"><h2>اتصال اتاق پایان یافت</h2><p>برای بازی دوباره، به لابی برگرد و اتاق تازه‌ای بساز.</p><button data-online="leave" class="primary">برگشت به لابی</button></div>';});
     joined.onError(()=>{if(room===joined)$('online-network-status').textContent='خطای ارتباط؛ در صورت ادامه، از اتاق خارج شو و دوباره متصل شو.';});
     joined.send('sync');
   }
   function send(type,data){if(room&&!reconnecting)room.send(type,data);}
   function render(){
     if(!state)return;
+    const playing=['choosing','reveal','finished'].includes(state.stage);document.body.classList.toggle('in-match',playing);document.body.classList.toggle('has-connection-issue',reconnecting);$('match-settings').hidden=!playing;$('match-mode-bar').hidden=!playing;$('match-mode-bar').textContent=modeLabels[state.mode];if(!playing&&$('match-settings-dialog').open)$('match-settings-dialog').close();
     $('online-network-status').textContent=reconnecting?'ارتباط قطع شده؛ تا ۳۰ ثانیه برای اتصال دوباره تلاش می‌کنیم…':state.quickMatch?'متصل به میدان بازی':'متصل به اتاق دوستان';
     document.querySelector('.room-code-label').hidden=state.quickMatch;
     $('online-friends').textContent=state.stage==='lobby'&&!state.quickMatch?'دعوت دوستان':'دوستان';
@@ -74,20 +77,34 @@ export function setupOnline({getOptions,getIdentity=async()=>({}),onResult=()=>{
       const revealed=state.stage==='reveal'||state.stage==='finished';
       const available=availableMoves(state.mode,state.players.filter(p=>p.active).length);
       const winner=state.players.find(p=>p.id===state.winner);
-      $('online-view').innerHTML=`<div class="online-match-top"><span>${modeLabels[state.mode]} • دست ${fa(state.round)}</span><span id="online-time" class="round-clock"></span></div>${tabletop(state.players,{className:'online-table',selfId:state.selfId,choices:state.choices,revealed,ownMove,round:state.round})}<div class="online-control-panel">${state.stage==='finished'?`<h1>${escape(winner?.name||'بازیکن')} قهرمان شد!</h1><p>نتیجهٔ این مسابقه با سرور محاسبه شد.</p>${state.host?'<button class="primary" data-online="rematch">یک مسابقهٔ تازه</button>':'<p>برای بازی مجدد منتظر میزبان بمان.</p>'}`:revealed?`<h2>${escape(state.notice)}</h2><p>دست بعدی خودکار شروع می‌شود.</p>`:!me?.active?'<h2>از این دور حذف شدی</h2><p>دست‌های باقی بازیکن‌ها را تماشا کن.</p>':me.committed||ownMove?'<h2>دستت ثبت شد</h2><p>انتخاب‌ها با هم رو می‌شوند؛ آماده باش.</p>':`<h2>${escape(me.name)}؛ دستت را انتخاب کن</h2><p>۵ ثانیه فرصت داری؛ با پایان زمان یک حرکت خودکار ثبت می‌شود.</p><div class="choices">${available.map((m,i)=>`<button data-online-move="${m}" ${reconnecting?'disabled':''}>${choiceArt(m)}<b>${labels[m]}</b><small>کلید ${fa(i+1)}</small></button>`).join('')}</div>`}</div>`;
+      $('online-view').innerHTML=`${matchHud()}<div class="arena-stage">${tabletop(state.players,{className:'online-table',selfId:state.selfId,choices:state.choices,revealed,ownMove,round:state.round})}${roundAward()}</div><div class="online-control-panel">${state.stage==='finished'?`<h1>${escape(winner?.name||'بازیکن')} قهرمان شد!</h1><p>نتیجهٔ این مسابقه با سرور محاسبه شد.</p>${state.host?'<button class="primary" data-online="rematch">یک مسابقهٔ تازه</button>':'<p>برای بازی مجدد منتظر میزبان بمان.</p>'}`:revealed?`<p>دست بعدی تا چند لحظهٔ دیگر…</p>`:!me?.active?'<h2>از این دور حذف شدی</h2><p>دست‌های باقی بازیکن‌ها را تماشا کن.</p>':me.committed||ownMove?'<h2>دستت ثبت شد</h2><p>انتخاب‌ها با هم رو می‌شوند؛ آماده باش.</p>':`<h2>${escape(me.name)}؛ دستت را انتخاب کن</h2><p>پیش از تمام‌شدن نوار، حرکتت را انتخاب کن.</p><div class="choices">${available.map((m,i)=>`<button data-online-move="${m}" ${reconnecting?'disabled':''}>${choiceArt(m)}<b>${labels[m]}</b><small>کلید ${fa(i+1)}</small></button>`).join('')}</div>`}</div>`;
     }
     updateTime();
   }
-  function updateTime(){
-    const clock=$('online-time');if(clock&&state.deadline){const seconds=Math.max(0,Math.ceil((state.deadline-state.serverTime)/1000));clock.textContent=`${fa(seconds)} ثانیه`;clock.classList.toggle('urgent',seconds<=2&&state.stage==='choosing');}
-    if(state.stage==='matching'){const remaining=Math.max(0,state.matchingDeadline-state.serverTime);$('matching-seconds').textContent=fa(Math.ceil(remaining/1000));$('matching-progress').value=5000-remaining;}
+  function matchHud(){
+    return `<div class="arena-hud"><div class="arena-round-label">دست ${fa(state.round)} • ${state.mode==='party'?fa(state.players.filter(p=>p.active).length)+' نفر باقی مانده':fa(state.rounds)+' دور'}</div><div class="arena-scoreboard" data-count="${state.players.length}" aria-label="امتیاز بازیکن‌ها">${state.players.map(p=>`<div class="score-player ${p.id===state.selfId?'is-you':''} ${!p.active?'is-out':''}"><b>${escape(p.name)}${p.id===state.selfId?' (تو)':''}</b><strong>${fa(p.wins)} <small>برد</small></strong><span>${state.mode==='party'&&!p.active?'حذف شده':fa(p.score)+' امتیاز'}</span></div>`).join('')}</div><div class="arena-timer"><span id="online-time" class="round-clock"></span><div id="round-timebar" class="round-timebar" role="progressbar" aria-label="زمان باقی‌ماندهٔ انتخاب" aria-valuemin="0" aria-valuemax="5" aria-valuenow="5"><span id="round-time-fill"></span></div></div></div>`;
   }
-  function choose(move){if(!availableMoves(state?.mode,state?.players.filter(p=>p.active).length).includes(move))return;if(state?.stage==='choosing'&&!ownMove&&state.players.find(p=>p.id===state.selfId)?.active){ownMove=move;send('move',{move,round:state.round,matchId:state.matchId});signature='';render();}}
-  async function leave(){const previous=room;room=null;state=null;signature='';forgetSeat();$('online-leave-dialog').close();showHome();if(previous)try{await previous.leave();}catch{}}
+  function roundAward(){
+    const r=state.roundResult;if(!r)return '';const scorer=state.players.find(p=>p.id===r.winnerId),out=state.players.find(p=>p.id===r.eliminatedId);
+    return `<div class="round-award ${r.tie?'is-tie':scorer?.id===state.selfId?'is-win':'is-result'}" role="status" aria-live="polite"><span class="award-burst" aria-hidden="true">✦</span><span class="award-caption">نتیجهٔ این دست</span><h2>${scorer?escape(scorer.name)+' برد!':out?escape(out.name)+' تک شد!':'مساوی!'}</h2><strong>${scorer?'+'+fa(r.points)+' امتیاز':out?'از این جمع حذف شد':'این دست دوباره'}</strong>${r.championBonus?'<small>+'+fa(r.championBonus)+' پاداش قهرمانی</small>':''}</div>`;
+  }
+  function updateTime(){
+    if(!state)return;const now=state.serverTime+performance.now()-receivedAt;
+    const remaining=Math.max(0,state.deadline-now),seconds=Math.ceil(remaining/1000),choosing=state.stage==='choosing';
+    const clock=$('online-time');if(clock){const text=choosing?fa(seconds)+' ثانیه برای انتخاب':state.stage==='finished'?'مسابقه تمام شد':'دست‌ها رو شدند';if(clock.textContent!==text)clock.textContent=text;clock.classList.toggle('urgent',seconds<=2&&choosing);}
+    const bar=$('round-timebar');if(bar){bar.setAttribute('aria-valuenow',String(choosing?Math.round(remaining/100)/10:0));bar.setAttribute('aria-valuetext',choosing?fa(seconds)+' ثانیه':'پایان انتخاب');$('round-time-fill').style.transform='scaleX('+(choosing?Math.min(1,remaining/5000):0)+')';}
+    const me=state.players.find(p=>p.id===state.selfId),urgent=choosing&&remaining>0&&remaining<=2000&&me?.active&&!me.committed&&!ownMove&&!reconnecting;document.body.classList.toggle('round-urgent',Boolean(urgent));
+    if(urgent){const key=state.matchId+':'+state.round+':'+seconds;if(key!==tickKey){tickKey=key;feedback.play('tick');}}
+    if(state.stage==='matching'){const remaining=Math.max(0,state.matchingDeadline-now);if($('matching-seconds'))$('matching-seconds').textContent=fa(Math.ceil(remaining/1000));if($('matching-progress'))$('matching-progress').value=5000-remaining;}
+  }
+  setInterval(updateTime,50);
+  function choose(move){if(!availableMoves(state?.mode,state?.players.filter(p=>p.active).length).includes(move))return;if(state?.stage==='choosing'&&!ownMove&&state.players.find(p=>p.id===state.selfId)?.active){ownMove=move;feedback.play('choose');send('move',{move,round:state.round,matchId:state.matchId});signature='';render();}}
+  async function leave(){const previous=room;room=null;state=null;signature='';document.body.classList.remove('in-match','round-urgent','has-connection-issue');$('match-settings-dialog').close();forgetSeat();$('online-leave-dialog').close();showHome();if(previous)try{await previous.leave();}catch{}}
   function requestLeave(){if(!room){showHome();return;}if(state?.stage==='matching'){void leave();return;}$('online-leave-dialog').showModal();}
   $('matchmaking-start').onclick=()=>{if(room){showRoom();return;}$('online-name').value=getOptions().name;$('matchmaking-start').disabled=true;void connect('quick');};
   $('online-open').onclick=open;$('online-close').onclick=()=>$('online-dialog').close();
   $('online-create').onclick=()=>connect('create');$('online-join').onclick=()=>connect('join');$('online-resume').onclick=()=>connect('resume');
+  $('match-settings').onclick=()=>$('match-settings-dialog').showModal();$('match-settings-close').onclick=()=>$('match-settings-dialog').close();$('match-exit').onclick=()=>{$('match-settings-dialog').close();requestLeave();};
   $('online-leave').onclick=requestLeave;$('online-leave-confirm').onclick=leave;$('online-leave-cancel').onclick=()=>$('online-leave-dialog').close();
   $('online-view').addEventListener('click',event=>{const b=event.target.closest('[data-online]');if(b){if(b.dataset.online==='ready')send('ready',!state.members.find(p=>p.self)?.ready);if(b.dataset.online==='start')send('start');if(b.dataset.online==='rematch')send('rematch');if(b.dataset.online==='leave')void leave();}const choice=event.target.closest('[data-online-move]');if(choice)choose(choice.dataset.onlineMove);});
   $('online-copy').onclick=async()=>{if(!state)return;try{await navigator.clipboard.writeText(state.roomId);$('online-network-status').textContent='کد اتاق کپی شد؛ دوستت آن را در بازی آنلاین وارد کند.';}catch{$('online-room-code').select();$('online-network-status').textContent='کد اتاق را از کادر انتخاب‌شده کپی کن.';}};

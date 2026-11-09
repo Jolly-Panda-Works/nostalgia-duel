@@ -78,3 +78,7 @@ The four bottom actions are now real tab/tabpanel navigation. Profile/settings a
 ## Hand collision fix
 
 Arm size now derives from the table container width/height instead of viewport width, with smaller sizes for 3–4 and 5–8 seats. Space remains between opposing fingertips during idle, throw and flip animations. scripts/test-hand-spacing.mjs composites the actual alpha masks at animation samples and checks 2–8 seats, all seven playable poses and six viewport sizes. No visible alpha overlap was found. Reviewed hand-spacing-2-1366.png and hand-spacing-8-390.png.
+
+## Match HUD, urgency and round award
+
+Match chrome is reduced to mode and settings; header, friends, room code and direct leave actions are hidden during play. The settings dialog exposes sound, volume, supported vibration and confirmed exit. Scores/wins are explicit in a compact player grid. A smooth server-clock countdown bar and text show five seconds; only an uncommitted active player receives the slow edge pulse in the final two seconds. Reduced-motion uses a steady edge. Authoritative roundResult exposes the per-round scorer/points, champion bonus, tie or eliminated player only after reveal, enabling the central award. Synthesized sound and vibration honor persisted controls. Browser tests cover urgent timing, score and award, tie, seven sizes, settings persistence and exit. Vibration behavior was mocked in automated tests; a physical Android device was not tested. Reviewed match-round-award.png and match-hud-mobile.png.
