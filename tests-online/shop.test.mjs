@@ -7,30 +7,30 @@ test('HTTP shop requires authentication and ignores client-supplied price, recip
   const a=await social.register('بازیکن اول',0),b=await social.register('بازیکن دوم',0);
   assert.equal((await fetch(base+'/shop')).status,401);
   const req=(token,path,body)=>fetch(base+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
-  const response=await req(a.token,'/shop/orders',{packId:'pouch',network:'bnb',coins:999999,amount:'0',address:'attacker'}),o=await response.json();assert.equal(response.status,200);assert.equal(o.coins,1000);assert.equal(o.address,networks.bnb.address);assert.ok(BigInt(o.units)>networks.bnb.base);
+  const response=await req(a.token,'/shop/orders',{packId:'pouch',network:'bnb',coins:999999,amount:'0',address:'attacker'}),o=await response.json();assert.equal(response.status,200);assert.equal(o.coins,300);assert.equal(o.address,networks.bnb.address);assert.ok(BigInt(o.units)>networks.bnb.base);
   assert.equal((await req(b.token,'/shop/orders/'+o.id+'/check',{txHash:hash})).status,404);assert.deepEqual((await(await req(b.token,'/shop')).json()).orders,[]);
-  const paid=await(await req(a.token,'/shop/orders/'+o.id+'/check',{txHash:hash,coins:999999})).json();assert.equal(paid.wallet.coins,1300);
+  const paid=await(await req(a.token,'/shop/orders/'+o.id+'/check',{txHash:hash,coins:999999})).json();assert.equal(paid.wallet.coins,600);
  }finally{await server.gracefullyShutdown(false);}
 });
 test('failed network or disk cannot report or grant a successful purchase',async()=>{
  const s=await SocialService.create(null),a=await s.register('خریدار',0),u=s.authenticate(a.token);s.shop.reader={height:async()=>100,verify:async()=>({status:'confirmed'})};
  const o=await s.shop.create(u,'pouch','bnb');const save=s.save;s.save=async()=>{throw Error('disk failure');};await assert.rejects(()=>s.shop.check(u,o.id,hash));assert.equal(u.coins,300);assert.equal(o.status,'awaiting');s.save=save;
  s.shop.reader.verify=async()=>{throw Error('network offline');};await assert.rejects(()=>s.shop.check(u,o.id,hash));assert.equal(u.coins,300);assert.equal(o.status,'awaiting');
- s.shop.reader.verify=async()=>({status:'confirmed'});await s.shop.check(u,o.id,hash);assert.equal(u.coins,1300);
+ s.shop.reader.verify=async()=>({status:'confirmed'});await s.shop.check(u,o.id,hash);assert.equal(u.coins,600);
 });
 test('invoices bind server prices, unique exact amounts, ownership and once-only durable credit',async()=>{
  const folder=await mkdtemp(path.join(os.tmpdir(),'shop-test-')),file=path.join(folder,'social.json');try{
   const s=await SocialService.create(file),a=await s.register('خریدار',0),b=await s.register('دیگری',0),u=s.authenticate(a.token),v=s.authenticate(b.token);
   let confirmed=false;s.shop.reader={height:async()=>100,verify:async()=>({status:confirmed?'confirmed':'pending',message:'waiting'})};
-  const o=await s.shop.create(u,'pouch','ethereum');assert.equal(o.coins,1000);assert.match(o.uri,/ethereum:0x.*@1\?value=/);assert.equal((await s.shop.create(u,'pouch','ethereum')).id,o.id);
+  const o=await s.shop.create(u,'pouch','ethereum');assert.equal(o.coins,300);assert.match(o.uri,/ethereum:0x.*@1\?value=/);assert.equal((await s.shop.create(u,'pouch','ethereum')).id,o.id);
   const other=await s.shop.create(v,'pouch','ethereum');assert.notEqual(o.units,other.units);await assert.rejects(()=>s.shop.check(v,o.id,hash),e=>e.status===404);
   await s.shop.check(u,o.id,hash);assert.equal(u.coins,300);confirmed=true;
-  await Promise.all([s.shop.check(u,o.id,hash),s.shop.check(u,o.id,hash)]);assert.equal(u.coins,1300);
+  await Promise.all([s.shop.check(u,o.id,hash),s.shop.check(u,o.id,hash)]);assert.equal(u.coins,600);
   await assert.rejects(()=>s.shop.check(v,other.id,hash),e=>e.status===409);
-  const restored=await SocialService.create(file);assert.equal(restored.authenticate(a.token).coins,1300);assert.equal(restored.purchaseOrders.find(x=>x.id===o.id).status,'paid');
-  await restored.shop.check(restored.authenticate(a.token),o.id,hash);assert.equal(restored.authenticate(a.token).coins,1300);
+  const restored=await SocialService.create(file);assert.equal(restored.authenticate(a.token).coins,600);assert.equal(restored.purchaseOrders.find(x=>x.id===o.id).status,'paid');
+  await restored.shop.check(restored.authenticate(a.token),o.id,hash);assert.equal(restored.authenticate(a.token).coins,600);
   await assert.rejects(()=>s.shop.create(u,'fake','bnb'));await assert.rejects(()=>s.shop.create(u,'pouch','fake'));
-  const pending=await s.shop.create(u,'chest','bnb');confirmed=false;await s.shop.check(u,pending.id,hash);confirmed=true;await s.shop.poll();assert.equal(u.coins,4300);
+  const pending=await s.shop.create(u,'chest','bnb');confirmed=false;await s.shop.check(u,pending.id,hash);confirmed=true;await s.shop.poll();assert.equal(u.coins,1400);
  }finally{await rm(folder,{recursive:true,force:true});}
 });
 function evmFixture(network='ethereum'){

@@ -1,11 +1,13 @@
 import {randomBytes,randomInt} from 'node:crypto';
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
+// Approximate USD anchor at 2026-11-09: ETH 2128.695, BNB 687.78, BTC 74806.175.
+// Native prices stay fixed for each invoice; exchange-rate changes require repricing.
 export const networks={
- ethereum:{name:'Ethereum Mainnet',ticker:'ETH',address:'0x4988bd4266D0b1279c8607F53A8c8C82aDF994a7',chainId:1,decimals:18,rpc:process.env.SHOP_ETH_RPC||'https://ethereum-rpc.publicnode.com',base:300000000000000n,step:1000000000n},
- bnb:{name:'BNB Smart Chain',ticker:'BNB',address:'0x4988bd4266D0b1279c8607F53A8c8C82aDF994a7',chainId:56,decimals:18,rpc:process.env.SHOP_BNB_RPC||'https://bsc-dataseed.binance.org',base:1000000000000000n,step:10000000000n},
- bitcoin:{name:'Bitcoin',ticker:'BTC',address:'bc1qxpc77z06cwmdu6dw47c4h7ajw9wpchq73hg0hz',decimals:8,api:process.env.SHOP_BTC_API||'https://blockstream.info/api',base:10000n,step:1n}
+ ethereum:{name:'Ethereum Mainnet',ticker:'ETH',address:'0x4988bd4266D0b1279c8607F53A8c8C82aDF994a7',chainId:1,decimals:18,rpc:process.env.SHOP_ETH_RPC||'https://ethereum-rpc.publicnode.com',base:2350000000000000n,step:1000000000n},
+ bnb:{name:'BNB Smart Chain',ticker:'BNB',address:'0x4988bd4266D0b1279c8607F53A8c8C82aDF994a7',chainId:56,decimals:18,rpc:process.env.SHOP_BNB_RPC||'https://bsc-dataseed.binance.org',base:7270000000000000n,step:10000000000n},
+ bitcoin:{name:'Bitcoin',ticker:'BTC',address:'bc1qxpc77z06cwmdu6dw47c4h7ajw9wpchq73hg0hz',decimals:8,api:process.env.SHOP_BTC_API||'https://blockstream.info/api',base:6700n,step:1n}
 };
-export const packs=[{id:'pouch',name:'کیسهٔ سکه',coins:1000,multiplier:1},{id:'chest',name:'صندوق سکه',coins:3000,multiplier:2},{id:'treasure',name:'گنجینهٔ سکه',coins:8000,multiplier:5}];
+export const packs=[{id:'pouch',name:'کیسهٔ سکه',coins:300,multiplier:1,usd:5},{id:'chest',name:'صندوق سکه',coins:800,multiplier:2,usd:10},{id:'treasure',name:'گنجینهٔ سکه',coins:2000,multiplier:5,usd:25}];
 export function decimal(units,places){const s=BigInt(units).toString().padStart(places+1,'0');return (s.slice(0,-places)+'.'+s.slice(-places)).replace(/0+$/,'').replace(/\.$/,'');}
 export class ChainReader{
  async get(url,plain=false){const r=await fetch(url,{signal:AbortSignal.timeout(12000)});if(r.status===404)return null;if(!r.ok)throw Error('Network unavailable');return plain?r.text():r.json();}
