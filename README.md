@@ -2,6 +2,8 @@
 
 Independent web + Android game based on the studio's `game-template` build contract. Local/offline play plus Colyseus guest rooms for LAN multiplayer. No YouTube dependency, cloud accounts or global leaderboard. Android uses Capacitor with portrait orientation; desktop web uses the wide table layout and small screens use the compact portrait layout.
 
+سازنده: **استودیو جولی پاندا — [jollypanda.ir](https://jollypanda.ir)**. لوگوی رسمی ارسالی کاربر در assets/brand نگهداری می‌شود و در پایین بازی و پنجرهٔ معرفی سازنده نمایش داده می‌شود.
+
 ## آنلاین و نام بازیکن‌ها
 
 نام‌های پیش‌فرض: آرش، ترانه، سامان، رها، نیما، مهتاب، باران و پویا؛ همه قابل تغییرند. برای شبکهٔ داخلی `START-ONLINE.cmd` یا `npm run build` و سپس `npm run start:online` را اجرا کنید. صفحهٔ بازی روی پورت 2567 است؛ دوستان با کد اتاق از دستگاه‌های مستقل وارد می‌شوند. [راهنمای کامل LAN و Colyseus](docs/ONLINE.fa.md) شامل اتصال گوشی، بازیابی اتصال، قواعد سرور و تست‌هاست. اینترنت عمومی راه‌اندازی نشده است.

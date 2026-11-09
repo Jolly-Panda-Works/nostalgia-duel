@@ -82,7 +82,7 @@ $('player-count').onchange=()=>{setup();updateLobby();};$('rps-opponent').onchan
 $('next').onclick=()=>{if(paused||phase!=='resolved')return;if(match.winner!==null)finish();else{match.round++;beginRound();}};
 $('pause').onclick=pause;$('exit').onclick=()=>{pause();modal('خروج از مسابقه؟','مسابقهٔ ناتمام در رکوردها ثبت نمی‌شود. می‌توانی ادامه بدهی یا به خانه برگردی.',true);};$('modal-close').onclick=()=>{$('modal').close();paused=false;document.body.classList.remove('paused');resumeTimer();};$('modal-exit').onclick=home;$('modal').addEventListener('cancel',e=>{e.preventDefault();$('modal-close').click();});
 $('help').onclick=()=>modal('قانون دورهمی','سنگ کاغذ قیچی: تعداد دورها قابل تنظیم است. تساوی تکرار می‌شود؛ برنده کسی است که در پایان برد بیشتری دارد. برد ۱۰۰ امتیاز دارد، زنجیرهٔ برد پاداش دارد و قهرمانی ۲۰۰ امتیاز اضافه.\nپلم پولوم پلیچ: همه کف یا پشت دست می‌آورند. بازیکن تک حذف می‌شود؛ در غیر این صورت همان جمع تکرار می‌کند. دو نفر آخر یک دست سنگ کاغذ قیچی بازی می‌کنند و تساوی تکرار می‌شود.\nبازی انسانی روی یک دستگاه: انتخاب‌ها مخفی و نوبتی‌اند؛ پس از انتخاب همه، دست‌ها هم‌زمان نمایش داده می‌شوند.\nآواتارها فعلاً نمادین هستند؛ طراحی چهره و انیمیشن دست‌ها مرحلهٔ بعد است.');
-document.addEventListener('keydown',e=>{if(e.repeat||$('modal').open||screen!=='game'||e.target.matches('input,select'))return;const i=['1','2','3'].indexOf(e.key);if(i>=0){e.preventDefault();choose((match.players.filter(p=>p.active).length>2?['palm','back']:moves)[i]);}});
+document.addEventListener('keydown',e=>{if(e.repeat||document.querySelector('dialog[open]')||screen!=='game'||e.target.matches('input,select'))return;const i=['1','2','3'].indexOf(e.key);if(i>=0){e.preventDefault();choose((match.players.filter(p=>p.active).length>2?['palm','back']:moves)[i]);}});
 $('configure').onclick=openSetup;$('nav-players').onclick=openSetup;$('close-setup').onclick=closeSetup;$('apply-setup').onclick=closeSetup;$('round-count').onchange=updateLobby;$('nav-home').onclick=home;
 Array.from($('player-count').options).forEach(option=>{const count=Number(option.value);option.value=String(count);option.textContent=fa(count);});
 $('setup-dialog').addEventListener('cancel',e=>{e.preventDefault();closeSetup();});
@@ -90,5 +90,6 @@ $('roster-prev').onclick=()=>{rosterPage--;setup();};$('roster-next').onclick=()
 $('score-prev').onclick=()=>{scorePage--;board();};$('score-next').onclick=()=>{scorePage++;board();};
 document.querySelectorAll('[data-score-mode]').forEach(button=>button.onclick=()=>{scoreMode=button.dataset.scoreMode;scorePage=0;board();});
 if(!native)fitWebViewport();
+$('studio-about').onclick=()=>$('studio-dialog').showModal();$('studio-close').onclick=()=>$('studio-dialog').close();
 onlineAPI=setupOnline({getOptions:()=>({mode,rounds:Number($('round-count').value),capacity:mode==='rps'?2:Number($('player-count').value),name:roster[0]?.name||defaultNames[0],avatar:roster[0]?.avatar||0}),escape,portrait,showHome:()=>show('home'),showRoom:()=>show('online')});
 bindLifecycle(pause);$('platform-label').textContent=native?'ANDROID • PORTRAIT':'WEB • LANDSCAPE';setup();updateLobby();requestAnimationFrame(()=>show('home'));
