@@ -46,3 +46,11 @@ Chrome rendered both the built web page and server-free HTML. Tested mode select
 ## LAN multiplayer follow-up
 
 The subsequent functional update adds real Colyseus guest rooms. Default names are now آرش، ترانه، سامان، رها، نیما، مهتاب، باران، پویا. The miniature visual system is retained. Online evidence is in out/qa/online-lobby-mobile.png, online-result-mobile.png, online-party-mobile.png and online-eight-mobile.png. These were opened and reviewed at a 390×844 CSS viewport: no horizontal overflow or blocked primary controls. Independent browser sessions tested create/join, host start after all ready, secret choices, shared winner, rematch, reload/reconnection and mixed human/bot party. Local play and server-free HTML still pass their browser checks. Only LAN hosting is in scope; public internet access and an APK device test remain unverified.
+
+## No-scroll web follow-up
+
+User explicitly requested no scrolling on any web screen. Added a compact responsive browser stage and proportional fitting when available height is short. Native Android is excluded from forced stage scaling. Long content remains reachable through pagination (four editable player slots and five record rows per page), not through clipping or scroll containers. Leaderboard tabs select the two modes.
+
+`scripts/test-viewport.mjs` passed at 1920×1080, 1366×768, 1280×600, 1024×600, 800×600, 390×844 and 360×640, covering home, eight-player lobby, both setup pages with preserved edits, local eight-player gameplay, pause/exit/help dialogs, online connection dialog, both scoreboard tabs/pages, reveal and result. Assertions check visible control bounding boxes, complete stage/dialog bounds, absence of scrollable content containers and wheel scrolling remaining at zero. Real online tests additionally verify two-player lobby/results at 1280×600, mobile states at 390×844 and eight-human online lobby/game at 360×640. Full local browser and standalone checks passed again.
+
+Evidence opened: `out/qa/no-scroll-game-1366.png`, `out/qa/no-scroll-game-390.png`, `out/qa/no-scroll-online-waiting-360.png` and `out/qa/online-eight-mobile.png`. No actionable clipping or navigation overlap was found. Very short windows intentionally scale the complete canvas, as expected for a fit-to-window game.
