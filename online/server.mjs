@@ -4,7 +4,7 @@ import express from 'express';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {networkInterfaces} from 'node:os';
-import {GameRoom} from './GameRoom.mjs';
+import {GameRoom,QuickMatchRoom} from './GameRoom.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 export async function startOnlineServer({port=Number(process.env.PORT||2567),host=process.env.HOST||'0.0.0.0'}={}){
@@ -15,6 +15,7 @@ export async function startOnlineServer({port=Number(process.env.PORT||2567),hos
     app.use(express.static(path.join(root,'dist'),{index:'index.html'}));
   }});
   server.define('nostalgia',GameRoom);
+  server.define('quick_match',QuickMatchRoom).filterBy(['mode','rounds','capacity']);
   await server.listen(port,host);
   return {server,port:transport.server.address().port};
 }

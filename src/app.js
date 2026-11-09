@@ -2,6 +2,7 @@ import{avatars,moves,icons,labels,fa,createMatch,resolve,cleanSave,defaultNames}
 import{native,load,persist,bindLifecycle}from'./platform.js';
 import{setupOnline}from'./online.js';
 import{fitWebViewport}from'./viewport.js';
+import{tabletop,choiceArt}from'./hands.js';
 import sword from '@phosphor-icons/core/assets/duotone/sword-duotone.svg';
 import users from '@phosphor-icons/core/assets/duotone/users-three-duotone.svg';
 import trophy from '@phosphor-icons/core/assets/duotone/trophy-duotone.svg';
@@ -17,12 +18,12 @@ document.querySelectorAll('[data-icon]').forEach(el=>el.src=iconAssets[el.datase
 const $=id=>document.getElementById(id),escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let mode='rps',roster=[],match,screen='loading',choices={},turns=[],turn=0,phase='idle',paused=false,timer=0,pending=null,remaining=0,started=0;
 let onlineAPI=null;
-let rosterPage=0,scorePage=0,scoreMode='rps';
+let rosterPage=0,scorePage=0,scoreMode='rps',roundTimedOut=false;
 const loaded=load();let save=loaded.data;
 function updateLobby(){
   $('lobby-mode-name').textContent=mode==='rps'?'سنگ کاغذ قیچی':'پلم پولوم پلیچ';
   $('lobby-players').innerHTML=roster.slice(0,4).map(p=>`<div class="lobby-player">${portrait(p.avatar)}<span>${escape(p.name.trim()||'بازیکن')}<small>${p.bot?'کامپیوتر':'انسان'}</small></span></div>`).join('')+(roster.length>4?`<span class="lobby-more">و ${fa(roster.length-4)} بازیکن دیگر؛ همه در «بازیکن‌ها»</span>`:'');
-  $('lobby-summary').textContent=mode==='rps'?`${fa(Number($('round-count').value))} دور • ${roster[1].bot?'حریف کامپیوتری':'دو نفر روی یک دستگاه'}`:`${fa(roster.length)} نفر • ${fa(roster.filter(p=>!p.bot).length)} انسان و ${fa(roster.filter(p=>p.bot).length)} کامپیوتر`;
+  $('lobby-summary').textContent=mode==='rps'?`${fa(Number($('round-count').value))} دور • دو نفر`:`${fa(roster.length)} نفر • دورهمی`;
   $('quick-rule').textContent=mode==='rps'?'بازی سریع؛ تساوی تکرار می‌شود.':'تک شوی حذف می‌شوی؛ دو نفر آخر، یک دوئل!';
 }
 function updateHUD(){
@@ -58,12 +59,31 @@ function resumeTimer(){if(pending&&!paused){started=performance.now();timer=setT
 function pause(){if(screen!=='game'||paused)return;paused=true;stopTimer();document.body.classList.add('paused');modal('یک نفس تازه کن','انتخاب‌ها حفظ شده‌اند؛ برای ادامه بزن.');}
 function home(){if(onlineAPI?.isActive()){onlineAPI.requestLeave();return;}stopTimer();pending=null;paused=false;document.body.classList.remove('paused');$('modal').close();show('home');}
 function start(){if(!roster.some(p=>!p.bot)){modal('حداقل یک بازیکن انسانی','نوع یکی از بازیکنان را از کامپیوتر به انسان تغییر بده.');return;}match=createMatch(mode,roster.map((p,i)=>({...p,name:p.name.trim()||defaultNames[i]})),Number($('round-count').value));show('game');beginRound();}
-function table(revealed=false){$('table').innerHTML=match.players.map(p=>`<div class="hand-seat ${!p.active?'eliminated':''}"><div class="seat-info">${portrait(p.avatar)}<div><b>${escape(p.name)}</b><small>${!p.active?'حذف‌شده':p.bot?'کامپیوتر':'بازیکن'}${match.mode==='rps'?` • ${fa(p.wins)} برد`:''}</small></div></div><div class="arm" style="--sleeve:${avatars[p.avatar].color}"><span class="hand ${revealed?'reveal':''}">${revealed&&choices[p.id]?icons[choices[p.id]]:p.active?'؟':'—'}</span></div></div>`).join('');}
-function beginRound(){phase='choose';choices={};turn=0;const active=match.players.filter(p=>p.active);const available=active.length>2?['palm','back']:moves;for(const p of active)if(p.bot)choices[p.id]=available[Math.floor(Math.random()*available.length)];turns=active.filter(p=>!p.bot);$('round-label').textContent=match.mode==='rps'?`دست ${fa(match.decisive+1)} از ${fa(match.rounds)}${match.decisive>=match.rounds?' • تعیین‌کننده':''}`:`دور ${fa(match.round)} • ${fa(active.length)} نفر${active.length===2?' • دوئل نهایی':''}`;$('game-status').textContent=active.length>2?'پلم… پولوم… پلیچ!':'سنگ… کاغذ… قیچی!';table();updateHUD();$('resolution').hidden=true;$('input-panel').hidden=false;nextHuman();}
-function nextHuman(){$('choices').hidden=true;if(turn>=turns.length){$('input-panel').hidden=true;$('game-status').textContent='همه آماده‌اند؛ دست‌ها رو می‌شوند…';phase='revealing';pending=reveal;remaining=650;resumeTimer();return;}const p=turns[turn];$('turn-name').textContent=`نوبت ${p.name}`;$('turn-help').textContent=turns.length>1?'دستگاه را به این بازیکن بدهید؛ بقیه نگاه نکنند.':'حرکتت را انتخاب کن؛ حریف انتخابش را ثبت کرده است.';$('reveal-controls').hidden=false;if(turns.length===1)revealControls();}
-function revealControls(){if(paused||phase!=='choose')return;$('reveal-controls').hidden=true;const available=match.players.filter(p=>p.active).length>2?['palm','back']:moves;$('choices').innerHTML=available.map((m,i)=>`<button data-move="${m}"><span>${icons[m]}</span><b>${labels[m]}</b><small>کلید ${fa(i+1)}</small></button>`).join('');$('choices').hidden=false;}
-function choose(move){if(paused||phase!=='choose'||$('choices').hidden||turn>=turns.length)return;const valid=match.players.filter(p=>p.active).length>2?['palm','back']:moves;if(!valid.includes(move))return;choices[turns[turn].id]=move;turn++;nextHuman();}
-function reveal(){const result=resolve(match,choices);phase='resolved';table(true);updateHUD();$('resolution').hidden=false;$('round-result').textContent=result.message;$('game-status').textContent=match.mode==='party'&&match.players.filter(p=>p.active).length===2&&!result.finished?'دو نفر ماندند؛ دست بعدی سنگ کاغذ قیچی است.':'دست‌ها رو شدند!';$('next').textContent=result.finished?'دیدن نتیجه ←':'دور بعد ←';}
+function table(revealed=false){const self=turns[turn]||match.players.find(p=>!p.bot)||match.players[0];$('table').outerHTML=tabletop(match.players,{id:'table',selfId:self.id,choices,revealed,round:match.round});}
+function beginRound(){phase='choose';choices={};turn=0;roundTimedOut=false;const active=match.players.filter(p=>p.active);const available=active.length>2?['palm','back']:moves;for(const p of active)if(p.bot)choices[p.id]=available[Math.floor(Math.random()*available.length)];turns=active.filter(p=>!p.bot);$('round-label').textContent=match.mode==='rps'?`دست ${fa(match.decisive+1)} از ${fa(match.rounds)}${match.decisive>=match.rounds?' • تعیین‌کننده':''}`:`دور ${fa(match.round)} • ${fa(active.length)} نفر${active.length===2?' • دوئل نهایی':''}`;$('game-status').textContent=active.length>2?'پلم… پولوم… پلیچ!':'سنگ… کاغذ… قیچی!';table();updateHUD();$('resolution').hidden=true;$('input-panel').hidden=false;nextHuman();}
+function nextHuman(){$('choices').hidden=true;if(turn>=turns.length){$('input-panel').hidden=true;$('game-status').textContent='همه آماده‌اند؛ دست‌ها رو می‌شوند…';phase='revealing';pending=reveal;remaining=650;resumeTimer();return;}table();const p=turns[turn];$('turn-name').textContent=`نوبت ${p.name}`;$('turn-help').textContent=turns.length>1?'دستگاه را به این بازیکن بدهید؛ بقیه نگاه نکنند.':'۵ ثانیه فرصت داری؛ دستت را انتخاب کن.';$('reveal-controls').hidden=false;if(turns.length===1)revealControls();}
+function revealControls(){
+  if(paused||phase!=='choose')return;
+  $('reveal-controls').hidden=true;
+  const available=match.players.filter(p=>p.active).length>2?['palm','back']:moves;
+  $('choices').innerHTML=available.map((m,i)=>`<button data-move="${m}">${choiceArt(m)}<b>${labels[m]}</b><small>کلید ${fa(i+1)}</small></button>`).join('');
+  $('choices').hidden=false;stopTimer();remaining=5000;pending=()=>choose(available[Math.floor(Math.random()*available.length)],true);resumeTimer();paintLocalClock();
+}
+function choose(move,automatic=false){
+  if(paused||phase!=='choose'||$('choices').hidden||turn>=turns.length)return;
+  const valid=match.players.filter(p=>p.active).length>2?['palm','back']:moves;
+  if(!valid.includes(move))return;
+  stopTimer();pending=null;if(automatic)roundTimedOut=true;
+  choices[turns[turn].id]=move;turn++;nextHuman();paintLocalClock();
+}
+function paintLocalClock(){
+  const seconds=phase==='choose'&&pending&&!$('choices').hidden?Math.max(0,Math.ceil((remaining-(timer?performance.now()-started:0))/1000)):null;
+  const text=seconds===null?'':`${fa(seconds)} ثانیه`;
+  if($('local-time').textContent!==text)$('local-time').textContent=text;
+  $('local-time').classList.toggle('urgent',seconds!==null&&seconds<=2);
+}
+setInterval(()=>{if(screen==='game')paintLocalClock();},150);
+function reveal(){const result=resolve(match,choices);phase='resolved';table(true);updateHUD();$('resolution').hidden=false;$('round-result').textContent=result.message+(roundTimedOut?' • انتخاب ناتمام خودکار ثبت شد.':'');$('game-status').textContent=match.mode==='party'&&match.players.filter(p=>p.active).length===2&&!result.finished?'دو نفر ماندند؛ دست بعدی سنگ کاغذ قیچی است.':'دست‌ها رو شدند!';$('next').textContent=result.finished?'دیدن نتیجه ←':'دور بعد ←';}
 function finish(){phase='finished';const winner=match.players.find(p=>p.id===match.winner);show('result');renderBattleLog();$('result-title').textContent=`${winner.name} قهرمان شد!`;$('result-copy').textContent=match.mode==='party'?'از جمع شلوغ تا دوئل آخر؛ یک خاطرهٔ تازه.':'یک دوئل دیگر، یک خاطرهٔ دیگر.';$('result-stats').innerHTML=match.mode==='party'?`<div><span>تعداد بازیکنان</span><strong>${fa(match.players.length)}</strong></div><div><span>دست‌های بازی‌شده</span><strong>${fa(match.history.length)}</strong></div>`:match.players.map(p=>`<div><span>${escape(p.name)}</span><strong>${fa(p.wins)} برد</strong><small>${fa(p.score)} امتیاز</small></div>`).join('');const records=match.mode==='party'?[{mode:'party',name:winner.name,score:match.players.length,rounds:match.history.length}]:match.players.filter(p=>!p.bot).map(p=>({mode:'rps',name:p.name,score:p.score,rounds:match.rounds}));save=cleanSave({...save,records:[...records,...save.records]});$('save-status').textContent=loaded.available&&persist(save)?'نتیجه روی همین دستگاه ذخیره شد.':'ذخیره در دسترس نیست؛ نتیجه فقط در این اجرا باقی می‌ماند.';}
 function board(){
   show('leaderboard');
@@ -81,7 +101,7 @@ $('roster').addEventListener('change',e=>{const i=e.target.dataset.bot;if(i!==un
 $('player-count').onchange=()=>{setup();updateLobby();};$('rps-opponent').onchange=()=>{setup();updateLobby();};$('start').onclick=start;$('again').onclick=start;$('scores').onclick=board;$('home-link').onclick=()=>screen==='game'?$('exit').click():home();$('reveal-controls').onclick=revealControls;
 $('next').onclick=()=>{if(paused||phase!=='resolved')return;if(match.winner!==null)finish();else{match.round++;beginRound();}};
 $('pause').onclick=pause;$('exit').onclick=()=>{pause();modal('خروج از مسابقه؟','مسابقهٔ ناتمام در رکوردها ثبت نمی‌شود. می‌توانی ادامه بدهی یا به خانه برگردی.',true);};$('modal-close').onclick=()=>{$('modal').close();paused=false;document.body.classList.remove('paused');resumeTimer();};$('modal-exit').onclick=home;$('modal').addEventListener('cancel',e=>{e.preventDefault();$('modal-close').click();});
-$('help').onclick=()=>modal('قانون دورهمی','سنگ کاغذ قیچی: تعداد دورها قابل تنظیم است. تساوی تکرار می‌شود؛ برنده کسی است که در پایان برد بیشتری دارد. برد ۱۰۰ امتیاز دارد، زنجیرهٔ برد پاداش دارد و قهرمانی ۲۰۰ امتیاز اضافه.\nپلم پولوم پلیچ: همه کف یا پشت دست می‌آورند. بازیکن تک حذف می‌شود؛ در غیر این صورت همان جمع تکرار می‌کند. دو نفر آخر یک دست سنگ کاغذ قیچی بازی می‌کنند و تساوی تکرار می‌شود.\nبازی انسانی روی یک دستگاه: انتخاب‌ها مخفی و نوبتی‌اند؛ پس از انتخاب همه، دست‌ها هم‌زمان نمایش داده می‌شوند.\nآواتارها فعلاً نمادین هستند؛ طراحی چهره و انیمیشن دست‌ها مرحلهٔ بعد است.');
+$('help').onclick=()=>modal('قانون دورهمی','سنگ کاغذ قیچی: تعداد دورها قابل تنظیم است. تساوی تکرار می‌شود؛ برنده کسی است که در پایان برد بیشتری دارد. برد ۱۰۰ امتیاز دارد، زنجیرهٔ برد پاداش دارد و قهرمانی ۲۰۰ امتیاز اضافه.\nپلم پولوم پلیچ: همه کف یا پشت دست می‌آورند. بازیکن تک حذف می‌شود؛ در غیر این صورت همان جمع تکرار می‌کند. دو نفر آخر یک دست سنگ کاغذ قیچی بازی می‌کنند و تساوی تکرار می‌شود.\nبازی انسانی روی یک دستگاه: انتخاب‌ها مخفی و نوبتی‌اند؛ پس از انتخاب همه، دست‌ها هم‌زمان نمایش داده می‌شوند.\nبرای شروع مسابقه، تا ۵ ثانیه حریف جست‌وجو می‌شود؛ در نبود حریف کافی، بازیکنان کامپیوتری جای خالی را پُر می‌کنند. هر نفر ۵ ثانیه برای انتخاب دارد؛ انتخاب ناتمام خودکار ثبت می‌شود.');
 document.addEventListener('keydown',e=>{if(e.repeat||document.querySelector('dialog[open]')||screen!=='game'||e.target.matches('input,select'))return;const i=['1','2','3'].indexOf(e.key);if(i>=0){e.preventDefault();choose((match.players.filter(p=>p.active).length>2?['palm','back']:moves)[i]);}});
 $('configure').onclick=openSetup;$('nav-players').onclick=openSetup;$('close-setup').onclick=closeSetup;$('apply-setup').onclick=closeSetup;$('round-count').onchange=updateLobby;$('nav-home').onclick=home;
 Array.from($('player-count').options).forEach(option=>{const count=Number(option.value);option.value=String(count);option.textContent=fa(count);});

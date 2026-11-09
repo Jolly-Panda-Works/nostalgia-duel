@@ -13,24 +13,27 @@ export class GameRoom extends Room {
     this.capacity=this.mode==='rps'?2:Math.min(8,Math.max(3,Number.isInteger(options.capacity)?options.capacity:4));
     this.rounds=[1,3,5,7,9].includes(options.rounds)?options.rounds:3;
     this.maxClients=this.capacity;this.maxMessagesPerSecond=15;
-    this.members=new Map();this.stage='lobby';this.match=null;this.selected={};this.notice='';this.matchId='';this.revealed={};this.fillBots=options.fillBots===true;
-    void this.setPrivate(true);
+    this.quick=this.constructor.quickMatch===true;
+    this.members=new Map();this.stage=this.quick?'matching':'lobby';this.match=null;this.selected={};this.notice='';this.matchId='';this.revealed={};this.fillBots=this.quick||options.fillBots===true;
+    this.matchingDeadline=this.quick?Date.now()+5000:0;this.lastPublished=0;this.automatic=[];
+    void this.setPrivate(!this.quick);
     this.onMessage('sync',client=>this.sendSnapshot(client));
     this.onMessage('ready',(client,data)=>{const p=this.members.get(client.sessionId);if(p&&this.stage==='lobby'){p.ready=data===true;this.publish();}});
     this.onMessage('start',client=>{if(client.sessionId===this.hostId)this.begin();});
     this.onMessage('move',(client,data)=>this.choose(client,data));
     this.onMessage('rematch',client=>{if(client.sessionId===this.hostId&&this.stage==='finished'){this.reset('برای مسابقهٔ تازه آماده شوید.');}});
-    this.clock.setInterval(()=>this.tick(),1000);
+    this.clock.setInterval(()=>this.tick(),100);
   }
-  onAuth(){return this.stage==='lobby';}
+  onAuth(){return this.stage==='lobby'||this.stage==='matching';}
   onJoin(client,options={}){
-    if(this.stage!=='lobby')throw Error('Match already started');
+    if(!['lobby','matching'].includes(this.stage))throw Error('Match already started');
     if(!this.hostId)this.hostId=client.sessionId;
     const used=new Set([...this.members.values()].map(p=>p.name));
     const base=cleanName(options.name,defaultNames[this.members.size%8]);let name=base,i=2;
     while(used.has(name))name=base.slice(0,19)+` ${i++}`;
-    this.members.set(client.sessionId,{sessionId:client.sessionId,name,avatar:Number.isInteger(options.avatar)&&options.avatar>=0&&options.avatar<4?options.avatar:this.members.size%4,connected:true,ready:false});
+    this.members.set(client.sessionId,{sessionId:client.sessionId,name,avatar:Number.isInteger(options.avatar)&&options.avatar>=0&&options.avatar<4?options.avatar:this.members.size%4,connected:true,ready:this.quick});
     this.publish();
+    if(this.quick&&this.members.size===this.capacity)this.begin();
   }
   onDrop(client){const p=this.members.get(client.sessionId);if(p){p.connected=false;this.publish();}this.allowReconnection(client,30);}
   onReconnect(client){const p=this.members.get(client.sessionId);if(p){p.connected=true;this.publish();}}
@@ -41,25 +44,25 @@ export class GameRoom extends Room {
     else this.publish();
   }
   reset(notice=''){
-    this.stage='lobby';this.match=null;this.selected={};this.revealed={};this.deadline=0;this.notice=notice;this.matchId='';
-    for(const p of this.members.values())p.ready=false;
+    this.stage=this.quick?'matching':'lobby';this.match=null;this.selected={};this.revealed={};this.deadline=0;this.notice=notice;this.matchId='';this.automatic=[];this.matchingDeadline=this.quick?Date.now()+5000:0;
+    for(const p of this.members.values())p.ready=this.quick;
     void this.unlock();this.publish();
   }
   begin(){
-    if(this.stage!=='lobby')return;
+    if(!['lobby','matching'].includes(this.stage))return;
     const members=[...this.members.values()];
     const min=this.mode==='party'?3:2;
     if(!members.length||members.some(p=>!p.connected||!p.ready)){this.notice='همهٔ بازیکنان باید متصل و آماده باشند.';this.publish();return;}
     if(!this.fillBots&&members.length<min){this.notice=`برای این حالت حداقل ${min} بازیکن لازم است.`;this.publish();return;}
     const players=members.map(p=>({name:p.name,avatar:p.avatar,bot:false,sessionId:p.sessionId}));
-    if(this.fillBots)while(players.length<this.capacity){const i=players.length;players.push({name:`${defaultNames[i%8]} (کامپیوتر)`,avatar:i%4,bot:true,sessionId:null});}
+    if(this.fillBots)while(players.length<this.capacity){const i=players.length;const name=defaultNames.find(n=>!players.some(p=>p.name===n))||`دوست ${i+1}`;players.push({name,avatar:i%4,bot:true,sessionId:null});}
     if(players.length<min)return;
     this.match=createMatch(this.mode,players,this.rounds);this.matchId=randomBytes(12).toString('hex');
     void this.lock();this.roundStart();
   }
   roundStart(){
     if(this.match.history.length>=250){this.reset('تعداد دست‌ها به سقف این جلسه رسید؛ یک مسابقهٔ تازه بسازید.');return;}
-    this.stage='choosing';this.notice='';this.selected={};this.revealed={};this.deadline=Date.now()+60000;
+    this.stage='choosing';this.notice='';this.selected={};this.revealed={};this.automatic=[];this.deadline=Date.now()+5000;
     const available=this.match.players.filter(p=>p.active).length>2?['palm','back']:moves;
     for(const p of this.match.players)if(p.active&&p.bot)this.selected[p.id]=this.botMove(available);
     this.resolveIfComplete();
@@ -68,11 +71,18 @@ export class GameRoom extends Room {
   botMove(available){return available[randomInt(available.length)];}
   resolveIfComplete(){
     if(this.stage!=='choosing'||!this.match.players.filter(p=>p.active).every(p=>Object.hasOwn(this.selected,p.id)))return;
-    const result=resolve(this.match,this.selected);this.revealed={...this.selected};this.notice=result.message;
-    this.stage=this.match.winner!==null?'finished':'reveal';this.deadline=this.stage==='reveal'?Date.now()+4000:0;
+    const result=resolve(this.match,this.selected);this.revealed={...this.selected};this.notice=result.message+(this.automatic.length?' • انتخاب‌های ناتمام خودکار ثبت شدند.':'');
+    this.stage=this.match.winner!==null?'finished':'reveal';this.deadline=this.stage==='reveal'?Date.now()+2200:0;
+  }
+  expireRound(){
+    if(this.stage!=='choosing')return;
+    const available=this.match.players.filter(p=>p.active).length>2?['palm','back']:moves;
+    for(const p of this.match.players)if(p.active&&!Object.hasOwn(this.selected,p.id)){this.selected[p.id]=this.botMove(available);this.automatic.push(p.id);}
+    this.resolveIfComplete();this.publish();
   }
   choose(client,data){
     if(this.stage!=='choosing'||!data||data.matchId!==this.matchId||data.round!==this.match.round)return;
+    if(Date.now()>=this.deadline){this.expireRound();return;}
     const player=this.match.players.find(p=>p.sessionId===client.sessionId&&p.active&&!p.bot);
     if(!player||Object.hasOwn(this.selected,player.id))return;
     const available=this.match.players.filter(p=>p.active).length>2?['palm','back']:moves;
@@ -82,15 +92,17 @@ export class GameRoom extends Room {
     this.publish();
   }
   tick(){
-    if(this.stage==='choosing'&&Date.now()>=this.deadline)this.reset('زمان انتخاب تمام شد؛ مسابقه بدون برنده لغو شد. دوباره آماده شوید.');
+    if(this.stage==='matching'&&Date.now()>=this.matchingDeadline)this.begin();
+    else if(this.stage==='choosing'&&Date.now()>=this.deadline)this.expireRound();
     else if(this.stage==='reveal'&&Date.now()>=this.deadline){this.match.round++;this.roundStart();}
-    else if(this.stage==='choosing'||this.stage==='reveal')this.publish();
+    else if(['matching','choosing','reveal'].includes(this.stage)&&Date.now()-this.lastPublished>=200)this.publish();
   }
   snapshot(sessionId){
     const players=this.match?this.match.players.map(p=>({id:p.id,name:p.name,avatar:p.avatar,bot:p.bot,active:p.active,wins:p.wins,score:p.score,connected:p.bot||this.members.get(p.sessionId)?.connected===true,committed:Object.hasOwn(this.selected,p.id)})):[];
     const me=this.match?.players.find(p=>p.sessionId===sessionId);
-    return {roomId:this.roomId,selfId:me?.id??null,host:this.hostId===sessionId,mode:this.mode,capacity:this.capacity,rounds:this.rounds,fillBots:this.fillBots,stage:this.stage,matchId:this.matchId,round:this.match?.round??0,deadline:this.deadline??0,serverTime:Date.now(),winner:this.match?.winner??null,notice:this.notice,members:[...this.members.values()].map(p=>({name:p.name,avatar:p.avatar,connected:p.connected,ready:p.ready,self:p.sessionId===sessionId,host:p.sessionId===this.hostId})),players,choices:this.stage==='reveal'||this.stage==='finished'?this.revealed:{}};
+    return {roomId:this.roomId,selfId:me?.id??null,host:this.hostId===sessionId,mode:this.mode,capacity:this.capacity,rounds:this.rounds,fillBots:this.fillBots,quickMatch:this.quick,matchingDeadline:this.matchingDeadline,automatic:this.automatic,stage:this.stage,matchId:this.matchId,round:this.match?.round??0,deadline:this.deadline??0,serverTime:Date.now(),winner:this.match?.winner??null,notice:this.notice,members:[...this.members.values()].map(p=>({name:p.name,avatar:p.avatar,connected:p.connected,ready:p.ready,self:p.sessionId===sessionId,host:p.sessionId===this.hostId})),players,choices:this.stage==='reveal'||this.stage==='finished'?this.revealed:{}};
   }
   sendSnapshot(client){client.send('snapshot',this.snapshot(client.sessionId));}
-  publish(){for(const client of this.clients)this.sendSnapshot(client);}
+  publish(){this.lastPublished=Date.now();for(const client of this.clients)this.sendSnapshot(client);}
 }
+export class QuickMatchRoom extends GameRoom {static quickMatch=true;}

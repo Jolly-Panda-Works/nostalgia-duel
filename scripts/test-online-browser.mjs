@@ -26,7 +26,7 @@ try{
   await a.locator('[data-online=ready]').click();await b.locator('[data-online=ready]').click();await a.waitForFunction(()=>!document.querySelector('[data-online=start]').disabled);
   await a.locator('[data-online=start]').click();await a.locator('[data-online-move=paper]').waitFor();await b.locator('[data-online-move=rock]').waitFor();
   await a.locator('[data-online-move=paper]').click();await a.getByRole('heading',{name:'دستت ثبت شد',exact:true}).waitFor();
-  assert.deepEqual(await b.locator('.hand').allTextContents(),['؟','؟']);
+  assert.deepEqual(await b.locator('.table-arm').evaluateAll(arms=>arms.map(a=>a.dataset.pose)),['idle','idle']);
   await b.locator('[data-online-move=rock]').click();await a.getByRole('heading',{name:'آرش قهرمان شد!'}).waitFor();await b.getByRole('heading',{name:'آرش قهرمان شد!'}).waitFor();
   await fit(a,'online result desktop');await fit(b,'online result mobile');
   await mkdir('out/qa',{recursive:true});await a.screenshot({path:'out/qa/online-result-desktop.png',fullPage:true});await b.screenshot({path:'out/qa/online-result-mobile.png',fullPage:true});
@@ -43,7 +43,7 @@ try{
   await b.locator('#online-open').click();await b.locator('#online-code').fill(partyCode);await b.locator('#online-join').click();await a.waitForFunction(()=>document.querySelectorAll('.online-member').length===2);
   await a.locator('[data-online=ready]').click();await b.locator('[data-online=ready]').click();await a.waitForFunction(()=>!document.querySelector('[data-online=start]').disabled);await a.locator('[data-online=start]').click();
   await a.locator('[data-online-move=palm]').waitFor();await b.locator('[data-online-move=back]').waitFor();await a.locator('[data-online-move=palm]').click();await b.locator('[data-online-move=back]').click();
-  await a.waitForFunction(()=>document.querySelectorAll('.online-table .eliminated').length===1);
+  await a.waitForFunction(()=>document.querySelectorAll('.online-table .is-eliminated').length===1);
   await b.screenshot({path:'out/qa/online-party-mobile.png',fullPage:true});assert.equal(await b.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   for(const p of [a,b]){await p.locator('#online-leave').click();await p.locator('#online-leave-confirm').click();await p.locator('#home').waitFor({state:'visible'});}
   await a.setViewportSize({width:360,height:640});await a.locator('#configure').click();await a.locator('#player-count').selectOption('8');await a.locator('#apply-setup').click();await a.locator('#online-open').click();await a.locator('#online-fill-bots').uncheck();await a.locator('#online-create').click();await a.locator('[data-online=ready]').waitFor();

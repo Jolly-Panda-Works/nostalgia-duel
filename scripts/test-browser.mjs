@@ -40,9 +40,9 @@ try{
   assert.match(await page.locator('#score-list').innerText(),/۵۷۵/);
   await page.reload();await page.locator('#home').waitFor({state:'visible'});assert.equal(await page.locator('#best').innerText(),'۵۷۵');
   await page.locator('[data-mode=party]').click();await setup();await page.locator('#player-count').selectOption('3');await page.locator('[data-bot="1"]').uncheck();await done();
-  assert.match(await page.locator('#lobby-summary').innerText(),/۲ انسان/);
+  assert.match(await page.locator('#lobby-summary').innerText(),/۳ نفر/);
   await page.locator('#start').click();await ready();await page.locator('[data-move=back]').click();
-  assert.equal(await page.locator('#choices').isVisible(),false);assert.equal(await page.locator('.hand').first().innerText(),'؟');
+  assert.equal(await page.locator('#choices').isVisible(),false);assert.equal(await page.locator('.table-arm').first().getAttribute('data-pose'),'idle');
   await ready();await page.locator('[data-move=palm]').click();await page.locator('#next').waitFor({state:'visible'});
   assert.match(await page.locator('#round-result').innerText(),/آرش تک شد/);
   await page.screenshot({path:'out/qa/party-desktop.png',fullPage:true});
@@ -55,7 +55,7 @@ try{
   await page.locator('#start').click();await page.locator('#pause').click();assert.equal(await page.locator('#modal').isVisible(),true);await page.locator('#modal-close').click();
   await page.screenshot({path:'out/qa/game-mobile.png',fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.locator('#exit').click();await page.locator('#modal-exit').click();await setup();await page.locator('#player-count').selectOption('8');await page.locator('[data-name="0"]').fill('<img src=x onerror=x()>');await done();
-  await page.locator('#start').click();assert.equal(await page.locator('.hand-seat').count(),8);assert.equal(await page.locator('#table img').count(),0);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await page.locator('#start').click();assert.equal(await page.locator('.hand-seat').count(),8);assert.equal(await page.locator('#table img[onerror]').count(),0);assert.equal(await page.locator('#table .arm-sprite').count(),8);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.screenshot({path:'out/qa/party-eight-mobile.png',fullPage:true});assert.deepEqual(errors,[]);
   console.log('Browser passed: miniature image, quick play, lobby navigation and setup, RPS, persistence, secret human choices, party elimination/final duel, pause, result log, 3/8-player mobile layout, safe names.');
 }finally{await browser?.close();server.kill();}

@@ -4,9 +4,14 @@ let html=await readFile('dist/index.html','utf8');
 const script=html.match(/<script\b[^>]*src="([^"]+)"[^>]*><\/script>/);
 const style=html.match(/<link\b[^>]*href="([^"]+\.css)"[^>]*>/);
 if(!script||!style)throw Error('Expected one bundled script and stylesheet');
-const js=await readFile('dist/'+script[1].replace(/^\.\//,''),'utf8');
+let js=await readFile('dist/'+script[1].replace(/^\.\//,''),'utf8');
 let css=await readFile('dist/'+style[1].replace(/^\.\//,''),'utf8');
 const mime={'.woff2':'font/woff2','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.svg':'image/svg+xml'};
+for(const asset of [...js.matchAll(/new URL\([`"']([^`"']+\.(?:webp|png|jpe?g|svg))[`"'],\s*import\.meta\.url\)\.href/g)]){
+  const file=path.resolve('dist',path.dirname(script[1]),asset[1]);
+  const data=await readFile(file);
+  js=js.replace(asset[0],()=>JSON.stringify(`data:${mime[path.extname(file)]};base64,${data.toString('base64')}`));
+}
 for(const font of [...css.matchAll(/url\((["']?)([^)'"\s]+\.(?:woff2|webp|png|jpe?g|svg))\1\)/g)]) {
   const file=path.resolve('dist',path.dirname(style[1]),font[2]);
   const data=await readFile(file);
