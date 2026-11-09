@@ -11,7 +11,11 @@ export function fitWebViewport(){
     root.style.setProperty('--game-height',`${height}px`);
     root.style.setProperty('--game-top',`${top}px`);
     app.style.width=`${Math.min(1240,width)}px`;
-    const scale=Math.min(1,width/Math.max(1,app.offsetWidth),(height-4)/Math.max(1,app.scrollHeight));
+    const dock=document.querySelector('.lobby-nav'),footer=document.querySelector('footer');
+    const dockTop=(dock.hidden?footer:dock).getBoundingClientRect().top;
+    const available=Math.max(100,Math.min(height,dockTop-top)-12);
+    root.style.setProperty('--content-height',`${available}px`);
+    const scale=Math.min(1,width/Math.max(1,app.offsetWidth),(available-4)/Math.max(1,app.scrollHeight));
     app.style.setProperty('--stage-scale',String(scale));
     for(const dialog of document.querySelectorAll('dialog[open]')){
       const s=Math.min(1,(width-16)/Math.max(1,dialog.offsetWidth),(height-16)/Math.max(1,dialog.scrollHeight+dialog.offsetHeight-dialog.clientHeight));

@@ -1,8 +1,8 @@
 import {availableMoves,beats,labels,modeLabels} from './core.js';
 import {handArt} from './hands.js';
 const node=(move,extra='')=>`<img src="${handArt[move]}" alt="" draggable="false"><b>${labels[move]}</b>${extra}`;
-export function setupTutorial({openModal,getMode}){
- const dialog=document.getElementById('modal'),view=document.createElement('div');view.id='tutorial-view';view.hidden=true;document.getElementById('modal-copy').after(view);
+export function setupTutorial({openModal,getMode,host=null}){
+ const dialog=document.getElementById('modal'),view=host||document.createElement('div');view.id='tutorial-view';view.hidden=!host;if(!host)document.getElementById('modal-copy').after(view);
  let mode='rps',selected='rock',example='single';
  function draw(){
   view.innerHTML=`<div class="lesson-tabs" role="tablist" aria-label="آموزش حالت بازی">${['rps','advanced','party','tips'].map(m=>`<button role="tab" aria-selected="${mode===m}" data-lesson="${m}">${{rps:'کلاسیک',advanced:'پیشرفته',party:'دورهمی',tips:'شروع بازی'}[m]}</button>`).join('')}</div><div id="lesson-content" role="tabpanel" aria-label="${modeLabels[mode]||'شروع بازی'}"></div>`;
@@ -22,5 +22,5 @@ export function setupTutorial({openModal,getMode}){
  }
  view.addEventListener('click',event=>{const tab=event.target.closest('[data-lesson]'),gesture=event.target.closest('[data-gesture]'),sample=event.target.closest('[data-example]');if(tab){mode=tab.dataset.lesson;selected='rock';draw();view.querySelector(`[data-lesson="${mode}"]`).focus({preventScroll:true});}if(gesture){selected=gesture.dataset.gesture;draw();view.querySelector(`[data-gesture="${selected}"]`).focus({preventScroll:true});}if(sample){example=sample.dataset.example;draw();view.querySelector(`[data-example="${example}"]`).focus({preventScroll:true});}});
  view.addEventListener('keydown',event=>{if(!event.target.matches('[role=tab]')||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const tabs=[...view.querySelectorAll('[role=tab]')],index=tabs.indexOf(event.target),next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowLeft'?1:-1)+tabs.length)%tabs.length;tabs[next].click();});
- return ()=>{openModal('با تصویر یاد بگیر','');dialog.classList.add('tutorial-modal');document.getElementById('modal-copy').hidden=true;view.hidden=false;mode=getMode();selected='rock';example='single';draw();document.getElementById('modal-close').textContent='یاد گرفتم؛ برگشت';};
+ return ()=>{if(host){view.hidden=false;mode=getMode();selected='rock';example='single';draw();return;}openModal('با تصویر یاد بگیر','');dialog.classList.add('tutorial-modal');document.getElementById('modal-copy').hidden=true;view.hidden=false;mode=getMode();selected='rock';example='single';draw();document.getElementById('modal-close').textContent='یاد گرفتم؛ برگشت';};
 }
