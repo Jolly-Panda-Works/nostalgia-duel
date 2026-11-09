@@ -32,7 +32,7 @@ export class GameRoom extends Room {
     const used=new Set([...this.members.values()].map(p=>p.name));
     const base=cleanName(options.name,defaultNames[this.members.size%8]);let name=base,i=2;
     while(used.has(name))name=base.slice(0,19)+` ${i++}`;
-    this.members.set(client.sessionId,{sessionId:client.sessionId,socialId:auth?.socialId||null,name,avatar:Number.isInteger(options.avatar)&&options.avatar>=0&&options.avatar<4?options.avatar:this.members.size%4,connected:true,ready:this.quick});
+    this.members.set(client.sessionId,{sessionId:client.sessionId,socialId:auth?.socialId||null,name,avatar:Number.isInteger(options.avatar)&&options.avatar>=0&&options.avatar<10?options.avatar:this.members.size%4,connected:true,ready:this.quick});
     this.publish();
     if(this.quick&&this.members.size===this.capacity)this.begin();
   }
@@ -82,7 +82,7 @@ export class GameRoom extends Room {
     const scorer=this.match.players.find(p=>p.wins>before[p.id].wins);
     const championBonus=scorer&&this.match.winner===scorer.id?200:0;
     this.roundResult={round:this.match.round,winnerId:scorer?.id??null,eliminatedId:result.eliminated?.id??null,tie:!scorer&&!result.eliminated,points:scorer?scorer.score-before[scorer.id].score-championBonus:0,championBonus};this.revealed={...this.selected};this.notice=result.message+(this.automatic.length?' • انتخاب‌های ناتمام خودکار ثبت شدند.':'');
-    if(this.match.winner!==null&&this.socialService){const winner=this.match.players.find(p=>p.id===this.match.winner),member=this.members.get(winner.sessionId);void this.socialService.settleMatch(this.matchId,member?.socialId||null,this.mode).catch(()=>{});}
+    if(this.match.winner!==null&&this.socialService){const winner=this.match.players.find(p=>p.id===this.match.winner),member=this.members.get(winner.sessionId);void this.socialService.settleMatch(this.matchId,member?.socialId||null,this.mode,this.match.players.map(p=>({socialId:this.members.get(p.sessionId)?.socialId,wins:p.wins}))).catch(()=>{});}
     this.stage=this.match.winner!==null?'finished':'reveal';this.deadline=this.stage==='reveal'?Date.now()+2200:0;
   }
   expireRound(){

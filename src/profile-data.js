@@ -1,0 +1,6 @@
+export const avatarCatalog=[{name:'رستم',price:0},{name:'شهرزاد',price:0},{name:'عمو نوروز',price:0},{name:'گردآفرید',price:80},{name:'زال',price:100},{name:'سهراب',price:120},{name:'تهمینه',price:140},{name:'سیمرغ',price:160},{name:'ملانصرالدین',price:180},{name:'حسن کچل',price:200}].map((a,id)=>({...a,id}));
+export const NAME_MIN=3,NAME_MAX=16;
+export const nameKey=name=>String(name).normalize('NFKC').replaceAll('ي','ی').replaceAll('ك','ک').replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/\u200c/g,'').replace(/\p{M}/gu,'').replace(/\u0640/g,'').trim().replace(/\s+/g,' ').toLocaleLowerCase('fa-IR');
+export function validPlayerName(value){if(typeof value!=='string')return false;const name=value.normalize('NFKC').trim().replace(/ +/g,' ');return Array.from(name.replace(/\u200c/g,'')).length>=NAME_MIN&&Array.from(name).length<=NAME_MAX&&/^[\p{L}\p{N} _\-\u200c]+$/u.test(name);}
+export const emptyStats=()=>Object.fromEntries(['rps','advanced','party'].map(mode=>[mode,{played:0,wins:0,losses:0,roundWins:0}]));
+export const levelFor=xp=>({level:Math.floor(xp/100)+1,progress:xp%100,next:100});
