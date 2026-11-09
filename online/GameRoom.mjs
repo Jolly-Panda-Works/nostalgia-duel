@@ -1,6 +1,6 @@
 import {Room} from '@colyseus/core';
 import {randomBytes,randomInt} from 'node:crypto';
-import {createMatch,resolve,moves,defaultNames} from '../src/core.js';
+import {createMatch,resolve,availableMoves,defaultNames} from '../src/core.js';
 
 export function cleanName(name,fallback='مهمان'){
   return typeof name==='string'?name.replace(/[\u0000-\u001f\u007f<>\u202a-\u202e\u2066-\u2069]/g,'').trim().slice(0,24)||fallback:fallback;
@@ -9,8 +9,8 @@ export function cleanName(name,fallback='مهمان'){
 export class GameRoom extends Room {
   onCreate(options={}){
     this.roomId=randomBytes(4).toString('hex').toUpperCase();
-    this.mode=options.mode==='party'?'party':'rps';
-    this.capacity=this.mode==='rps'?2:Math.min(8,Math.max(3,Number.isInteger(options.capacity)?options.capacity:4));
+    this.mode=['party','advanced'].includes(options.mode)?options.mode:'rps';
+    this.capacity=this.mode!=='party'?2:Math.min(8,Math.max(3,Number.isInteger(options.capacity)?options.capacity:4));
     this.rounds=[1,3,5,7,9].includes(options.rounds)?options.rounds:3;
     this.maxClients=this.capacity;this.maxMessagesPerSecond=15;
     this.quick=this.constructor.quickMatch===true;
@@ -63,7 +63,7 @@ export class GameRoom extends Room {
   roundStart(){
     if(this.match.history.length>=250){this.reset('تعداد دست‌ها به سقف این جلسه رسید؛ یک مسابقهٔ تازه بسازید.');return;}
     this.stage='choosing';this.notice='';this.selected={};this.revealed={};this.automatic=[];this.deadline=Date.now()+5000;
-    const available=this.match.players.filter(p=>p.active).length>2?['palm','back']:moves;
+    const available=availableMoves(this.mode,this.match.players.filter(p=>p.active).length);
     for(const p of this.match.players)if(p.active&&p.bot)this.selected[p.id]=this.botMove(available);
     this.resolveIfComplete();
     this.publish();
@@ -76,7 +76,7 @@ export class GameRoom extends Room {
   }
   expireRound(){
     if(this.stage!=='choosing')return;
-    const available=this.match.players.filter(p=>p.active).length>2?['palm','back']:moves;
+    const available=availableMoves(this.mode,this.match.players.filter(p=>p.active).length);
     for(const p of this.match.players)if(p.active&&!Object.hasOwn(this.selected,p.id)){this.selected[p.id]=this.botMove(available);this.automatic.push(p.id);}
     this.resolveIfComplete();this.publish();
   }
@@ -85,7 +85,7 @@ export class GameRoom extends Room {
     if(Date.now()>=this.deadline){this.expireRound();return;}
     const player=this.match.players.find(p=>p.sessionId===client.sessionId&&p.active&&!p.bot);
     if(!player||Object.hasOwn(this.selected,player.id))return;
-    const available=this.match.players.filter(p=>p.active).length>2?['palm','back']:moves;
+    const available=availableMoves(this.mode,this.match.players.filter(p=>p.active).length);
     if(!available.includes(data.move))return;
     this.selected[player.id]=data.move;
     this.resolveIfComplete();

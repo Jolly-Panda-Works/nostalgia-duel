@@ -4,8 +4,10 @@ import paper from '../assets/hands/paper.webp';
 import scissors from '../assets/hands/scissors.webp';
 import palm from '../assets/hands/palm.webp';
 import back from '../assets/hands/back.webp';
+import lizard from '../assets/hands/lizard.webp';
+import spock from '../assets/hands/spock.webp';
 import {labels,fa} from './core.js';
-export const handArt={idle,rock,paper,scissors,palm,back};
+export const handArt={idle,rock,paper,scissors,palm,back,lizard,spock};
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function choiceArt(move){return `<img class="choice-art" src="${handArt[move]}" alt="" aria-hidden="true">`;}
 export function tabletop(players,{id='',selfId=0,choices={},revealed=false,ownMove=null,round=0,className=''}={}){
@@ -20,5 +22,5 @@ export function tabletop(players,{id='',selfId=0,choices={},revealed=false,ownMo
   }).join('');
   return `<div ${id?`id="${id}"`:''} class="hand-table physical-table ${className}" data-seats="${seats.length}" data-phase="${revealed?'reveal':'choose'}" data-round="${round}"><div class="table-top" aria-hidden="true"></div>${arms}</div>`;
 }
-// Warm the six states so changing pose does not wait for a network request.
+// Warm the gesture states so changing pose does not wait for a network request.
 for(const src of Object.values(handArt)){const image=new Image();image.src=src;}

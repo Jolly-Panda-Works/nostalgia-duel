@@ -37,3 +37,11 @@ App id: `com.jollypanda.nostalgiaduel` (slug: `nostalgiaduel`, repository: `nost
 
 The earlier YouTube prototype is retained in the original YouTube Playable Games folder as an archive; this repository is the active web/Android version.
 
+
+### دوئل پیشرفته
+
+حالت سوم «دوئل پیشرفته» نسخهٔ پنج‌حرکتی سنگ، کاغذ، قیچی، مارمولک و اسپاک است. قواعد: سنگ قیچی/مارمولک؛ کاغذ سنگ/اسپاک؛ قیچی کاغذ/مارمولک؛ مارمولک کاغذ/اسپاک؛ اسپاک سنگ/قیچی را شکست می‌دهند. دو نفر، دورهای ۱/۳/۵/۷/۹، تساوی تکراری، رکورد مستقل، ژست‌های متحرک و کلیدهای ۱ تا ۵ دارد. در مسابقهٔ سریع و اتاق دوستان نیز قابل بازی است. دورهمی همچنان با دوئل کلاسیک تمام می‌شود. مهلت انتخاب و جست‌وجو ۵ ثانیه است.
+
+منبع معرفی: [ویکی‌پدیای فارسی](https://fa.wikipedia.org/wiki/سنگ-کاغذ-قیچی)، بخش نسخه‌های گسترش‌یافته؛ [صفحهٔ Sam Kass و Karen Bryla](https://www.samkass.com/theories/RPSSL.html). تصویر و متن نمودار آن صفحه استفاده نشده؛ ژست‌ها به‌صورت اختصاصی ساخته شده‌اند. اطلس، WebPها و prompt در assets/hands هستند.
+
+تست‌ها: npm test، npm run test:online و node scripts/test-advanced-browser.mjs (۲۵ ترکیب، دورها/رکوردها، جداسازی اتاق، محرمانگی، اعتبارسنجی، دو مرورگر و هفت اندازه).

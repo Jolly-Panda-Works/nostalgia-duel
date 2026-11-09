@@ -58,3 +58,7 @@ Evidence opened: `out/qa/no-scroll-game-1366.png`, `out/qa/no-scroll-game-390.pn
 ## Animated tabletop and quick matching
 
 Six transparent illustrated forearm sprites replace symbolic hands. The local player sits below the table; opponents sit around it with equal styling and plain names. CSS animates idle, throw, palm/back turn and withdrawal. The atlas and generation prompt are retained in assets/hands. Browser checks cover loaded sprites, secret choices, local party, real online play and quick search/cancellation. Server tests exercise matching filters, five-second fallback and five-second automatic choice. Seven viewport sizes still pass no-scroll checks. Standalone embeds all six sprite URLs.
+
+## Advanced five-gesture duel
+
+Added a third mode and separate records tab, while keeping party final duels classic. Two original transparent forearm sprites depict lizard and Spock. The five choices fit one row; all seven viewport sizes were checked with all controls on-screen. Browser tests cover local Spock key5, separate records, two independent quick-match clients, lizard beating Spock, and loaded hand images. Reviewed advanced-mobile.png and advanced-online-desktop.png.
