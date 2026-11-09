@@ -1,0 +1,5 @@
+{
+  "$comment": "Myket build. publicKey: the in-app billing public key from the Myket developer panel (public, safe to commit). Product ids are the same as Cafe Bazaar's (BAZAAR_PRODUCTS in packages/shared/src/economy.ts).",
+  "publicKey": "",
+  "billingVersion": "2.2"
+}

@@ -1,0 +1,115 @@
+name: Android and Iranian stores
+on:
+  push:
+    branches: [main, Iranian-store]
+    paths-ignore: ['**.md', 'docs/**']
+  workflow_dispatch:
+    inputs:
+      bump:
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+      publish_stores:
+        description: Send signed APKs to the stores for review (Iranian-store only)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: vars.BUILD_MODE == 'local'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      stores: ${{ steps.version.outputs.stores }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: version
+        env:
+          BUMP: ${{ inputs.bump || 'patch' }}
+        run: |
+          echo "version=$(node scripts/version.mjs)" >> "$GITHUB_OUTPUT"
+          echo "stores=$(node -e 'const c=JSON.parse(require("fs").readFileSync("game.config.json")); console.log(JSON.stringify([...c.stores,"debug"]))')" >> "$GITHUB_OUTPUT"
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        store: ${{ fromJSON(needs.prepare.outputs.stores) }}
+    env:
+      STORE: ${{ matrix.store }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+      SOURCE_BRANCH: ${{ github.ref_name }}
+      PUBLISH_STORES: ${{ matrix.store != 'debug' && github.ref_name == 'Iranian-store' && (inputs.publish_stores == true || (github.event_name == 'push' && vars.AUTO_PUBLISH_STORES == 'true')) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+          log-accepted-android-sdk-licenses: false
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:android
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          BAZAAR_RSA_KEY: ${{ vars.BAZAAR_RSA_KEY }}
+          MYKET_PUBLIC_KEY: ${{ vars.MYKET_PUBLIC_KEY }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ matrix.store }}
+          path: out/*
+          retention-days: 1
+          if-no-files-found: error
+      - run: node scripts/publish-stores.mjs
+        env:
+          BAZAAR_PISHKHAN_TOKEN: ${{ secrets.BAZAAR_PISHKHAN_TOKEN }}
+          MYKET_ACCESS_TOKEN: ${{ secrets.MYKET_ACCESS_TOKEN }}
+          BAZAAR_CHANNEL: ${{ vars.BAZAAR_CHANNEL || 'alpha' }}
+          BAZAAR_AUTO_PUBLISH: ${{ vars.BAZAAR_AUTO_PUBLISH || 'false' }}
+          MYKET_AUTO_PUBLISH: ${{ vars.MYKET_AUTO_PUBLISH || 'false' }}
+  release:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: android-*
+          path: out
+          merge-multiple: true
+      - name: Tag the exact built source and publish APKs
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          TAG="v$VERSION"
+          if [ "$GITHUB_REF_NAME" = Iranian-store ]; then TAG="stores-v$VERSION"; fi
+          git tag "$TAG" "$GITHUB_SHA"
+          git push origin "$TAG"
+          (cd out && find . -maxdepth 1 -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt)
+          gh release create "$TAG" out/* --verify-tag --title "$TAG" --notes "Android builds from $GITHUB_SHA. Store submission is controlled separately."

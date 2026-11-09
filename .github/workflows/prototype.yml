@@ -1,0 +1,38 @@
+name: Prototype APK and Web
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: prototype-build
+  cancel-in-progress: false
+jobs:
+  prototype:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+          log-accepted-android-sdk-licenses: false
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:android
+        env:
+          STORE: debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nostalgia-duel-prototype
+          path: out/*
+          retention-days: 14
+          if-no-files-found: error

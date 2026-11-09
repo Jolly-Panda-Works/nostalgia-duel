@@ -1,0 +1,9 @@
+{
+  "$comment": "Cafe Bazaar build. rsaKey: the in-app billing RSA public key from the Bazaar developer panel (public, safe to commit). Product ids live in apps/client/src/network/bazaarProducts.ts. developerId: your developer id from the Bazaar panel, for the More games button (empty hides it).",
+  "rsaKey": "",
+  "poolakeyVersion": "2.2.0",
+  "kotlinVersion": "2.2.20",
+  "authVersion": "1.1.0",
+  "updaterVersion": "1.2.0",
+  "developerId": ""
+}

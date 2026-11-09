@@ -1,0 +1,27 @@
+# Nostalgia Duel / دوئل نوستالژی
+
+Independent web + Android game based on the studio's `game-template` build contract. No YouTube SDK, account, network score API, cloud save, or YouTube publishing dependency. Android uses Capacitor with portrait orientation; desktop web uses the wide table layout and small screens use the compact portrait layout.
+
+## اجرا
+
+Node 22.12+ and Java 21 for native builds. `npm ci`, `npm run dev` then open the URL shown by Vite. `START-GAME.cmd` is a dependency-free local server at http://127.0.0.1:4173. `npm test` runs logic and pipeline tests; `npm run test:browser` tests the real browser with Chrome installed. `npm run build` creates the relative-path web bundle in dist.
+
+## بازی‌ها
+
+- سنگ کاغذ قیچی: دو بازیکن، انسانی یا انسان با کامپیوتر؛ ۱/۳/۵/۷/۹ دور غیرمساوی قابل تنظیم. تساوی تکرار می‌شود و هرگز یک دور مصرف نمی‌کند. بیشترین برد پس از دورهای تعیین‌شده قهرمان است.
+- پلم پولوم پلیچ: ۳ تا ۸ بازیکن با ترکیب انسان و کامپیوتر. انتخاب کف/پشت دست؛ فقط بازیکن تک حذف می‌شود. اگر تک نداشته باشیم، همان جمع دوباره بازی می‌کند. دو نفر آخر یک دست تعیین‌کنندهٔ سنگ کاغذ قیچی دارند؛ تساوی تکرار می‌شود.
+- انتخاب‌های انسانی روی یک دستگاه مخفی و نوبتی‌اند و بعد از انتخاب همه، هم‌زمان رو می‌شوند. این نسخه مولتی‌پلیر آنلاین نیست. کامپیوترها پیش از انتخاب انسان‌ها دست تصادفی مستقل ثبت می‌کنند.
+- صحنه فقط دست و آستین دارد، همراه آواتار کوچک کنار نام. آواتارها CSS موقت‌اند، فاقد تصویر اصلی شخصیت‌ها. چهره‌های مجاز و انیمیشن نهایی پس از تست اضافه می‌شوند.
+- رکوردهای محلی دو حالت جدا هستند؛ امتیاز سنگ‌کاغذقیچی و جام‌های دورهمی مستقیماً مقایسه نمی‌شوند. رکوردهای دوئل تعداد دور مسابقه را نیز نمایش می‌دهند. تبلیغ، پرداخت و تله‌متری فعلاً خاموش‌اند.
+
+## Android / CI
+
+App id: `com.jollypanda.nostalgia_duel`. `npm run android:prepare` creates/syncs ignored android/. `STORE=debug npm run build:android` (PowerShell: `$env:STORE='debug'; npm run build:android`) produces a standalone debug APK in out plus a web ZIP. Local Android SDK 36 required. Debug app id has `.debug` suffix; never submit debug APK to a store.
+
+`.github/workflows/prototype.yml` provides a manually triggered APK + web test build without release keys or store submission. Main release pipeline remains the template's central builder contract: main for development, Iranian-store for builds, web=true, separate Bazaar/Myket targets. Creating a repo does not automatically authorize the central builder GitHub App. Register/activate with the template's setup script only after access and permanent signing are configured. No publisher should be enabled for this prototype.
+
+## درآمد و حقوق محتوا
+
+[برنامهٔ درآمدی فارسی](docs/MONETIZATION.fa.md): هستهٔ رایگان + بستهٔ تزئینی یک‌باره + آگهی اختیاری محدود؛ بدون برتری پولی. خروج از YouTube مجوز استفادهٔ تجاری از شخصیت‌ها، چهره‌ها و آواتارهای دیگران ایجاد نمی‌کند. برای استفادهٔ نهایی حقوق باید روشن باشند؛ تصاویر نمادین فعلی برای تست‌اند.
+
+The earlier YouTube prototype is retained in the original YouTube Playable Games folder as an archive; this repository is the active web/Android version.
