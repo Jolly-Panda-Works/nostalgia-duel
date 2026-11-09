@@ -1,3 +1,6 @@
 export const STARTER_COINS=300;
-export const entryOffers={rps:{entry:20,coins:35,xp:30,participationXp:10},advanced:{entry:40,coins:70,xp:50,participationXp:15},party:{entry:30,coins:120,xp:80,participationXp:15}};
-export const offerFor=mode=>entryOffers[mode]||entryOffers.rps;
+export const tournamentNames={1:'برق‌آسا',3:'معمولی',5:'حرفه‌ای',7:'استادان',9:'قهرمانی'};
+const duelOffers={rps:{1:[10,18,15,5],3:[20,35,30,10],5:[35,65,55,15],7:[50,95,80,20],9:[70,135,110,25]},advanced:{1:[20,35,25,8],3:[40,70,50,15],5:[65,120,85,25],7:[90,170,120,35],9:[120,230,160,45]}};
+export function offerFor(mode,rounds=3,capacity=4){if(mode==='party'){const players=Math.min(8,Math.max(3,Number.isInteger(capacity)?capacity:4)),stages=players-1;return{entry:stages*10,coins:stages*40,xp:stages*25+5,participationXp:stages*5,plannedRounds:stages,name:stages<=2?'دورهمی سریع':stages<=4?'دورهمی حرفه‌ای':'دورهمی قهرمانی'};}const r=[1,3,5,7,9].includes(rounds)?rounds:3,[entry,coins,xp,participationXp]=duelOffers[mode==='advanced'?'advanced':'rps'][r];return{entry,coins,xp,participationXp,plannedRounds:r,name:tournamentNames[r]};}
+export const entryOffers=Object.fromEntries(['rps','advanced','party'].map(mode=>[mode,offerFor(mode)]));
+export function roundDurationFor(match){if(match.mode==='party'){const total=match.players.length,active=match.players.filter(p=>p.active).length;const progress=Math.max(0,Math.min(1,(total-active)/Math.max(1,total-2)));return Math.round((5000-2000*progress)/100)*100;}if(match.rounds===1)return 3000;const progress=Math.max(0,Math.min(1,match.decisive/(match.rounds-1)));return Math.round((5000-2000*progress)/100)*100;}

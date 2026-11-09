@@ -1,4 +1,4 @@
-import {offerFor} from '../src/economy.js';
+import {offerFor,roundDurationFor} from '../src/economy.js';
 import {Room} from '@colyseus/core';
 import {randomBytes,randomInt} from 'node:crypto';
 import {createMatch,resolve,availableMoves,defaultNames} from '../src/core.js';
@@ -12,7 +12,7 @@ export class GameRoom extends Room {
     this.roomId=randomBytes(4).toString('hex').toUpperCase();
     this.mode=['party','advanced'].includes(options.mode)?options.mode:'rps';
     this.capacity=this.mode!=='party'?2:Math.min(8,Math.max(3,Number.isInteger(options.capacity)?options.capacity:4));
-    this.rounds=[1,3,5,7,9].includes(options.rounds)?options.rounds:3;
+    this.rounds=this.mode==='party'?1:[1,3,5,7,9].includes(options.rounds)?options.rounds:3;
     this.maxClients=this.capacity;this.maxMessagesPerSecond=15;
     this.quick=this.constructor.quickMatch===true;
     this.members=new Map();this.stage=this.quick?'matching':'lobby';this.match=null;this.selected={};this.notice='';this.matchId='';this.revealed={};this.fillBots=this.quick||options.fillBots===true;
@@ -56,19 +56,19 @@ export class GameRoom extends Room {
     const members=[...this.members.values()];
     const min=this.mode==='party'?3:2;
     if(!members.length||members.some(p=>!p.connected||!p.ready)){this.notice='همهٔ بازیکنان باید متصل و آماده باشند.';this.publish();return;}
-    if(!this.fillBots&&members.length<min){this.notice=`برای این حالت حداقل ${min} بازیکن لازم است.`;this.publish();return;}
+    if(!this.fillBots&&members.length<this.capacity){this.notice=`برای این حالت ${this.capacity} بازیکن لازم است.`;this.publish();return;}
     const players=members.map(p=>({name:p.name,avatar:p.avatar,bot:false,sessionId:p.sessionId}));
     if(this.fillBots)while(players.length<this.capacity){const i=players.length;const name=defaultNames.find(n=>!players.some(p=>p.name===n))||`دوست ${i+1}`;players.push({name,avatar:i%4,bot:true,sessionId:null});}
     if(players.length<min)return;
     this.stage='starting';this.matchId=randomBytes(12).toString('hex');const entryMatch=this.matchId;
-    try{if(this.socialService)await this.socialService.chargeEntries(entryMatch,members.map(p=>p.socialId).filter(Boolean),this.mode);}catch(error){this.reset(error.status?error.message:'ثبت ورودی انجام نشد؛ دوباره تلاش کن.');return;}
+    try{if(this.socialService)await this.socialService.chargeEntries(entryMatch,members.map(p=>p.socialId).filter(Boolean),this.mode,this.rounds,this.capacity);}catch(error){this.reset(error.status?error.message:'ثبت ورودی انجام نشد؛ دوباره تلاش کن.');return;}
     if(this.stage!=='starting'||this.matchId!==entryMatch){if(this.socialService)void this.socialService.refundMatch(entryMatch).catch(()=>{});return;}
     this.match=createMatch(this.mode,players,this.rounds);
     void this.lock();this.roundStart();
   }
   roundStart(){
     if(this.match.history.length>=250){this.reset('تعداد دست‌ها به سقف این جلسه رسید؛ یک مسابقهٔ تازه بسازید.');return;}
-    this.roundResult=null;this.stage='choosing';this.notice='';this.selected={};this.revealed={};this.automatic=[];this.deadline=Date.now()+5000;
+    this.roundResult=null;this.stage='choosing';this.notice='';this.selected={};this.revealed={};this.automatic=[];this.roundDurationMs=roundDurationFor(this.match);this.deadline=Date.now()+this.roundDurationMs;
     const available=availableMoves(this.mode,this.match.players.filter(p=>p.active).length);
     for(const p of this.match.players)if(p.active&&p.bot)this.selected[p.id]=this.botMove(available);
     this.resolveIfComplete();
@@ -112,7 +112,7 @@ export class GameRoom extends Room {
     const players=this.match?this.match.players.map(p=>({id:p.id,name:p.name,avatar:p.avatar,bot:p.bot,active:p.active,wins:p.wins,score:p.score,connected:p.bot||this.members.get(p.sessionId)?.connected===true,committed:Object.hasOwn(this.selected,p.id)})):[];
     const me=this.match?.players.find(p=>p.sessionId===sessionId);
     const socialId=this.members.get(sessionId)?.socialId;
-    return {economy:offerFor(this.mode),wallet:socialId&&this.socialService?this.socialService.wallet(socialId):null,reward:this.stage==='finished'&&socialId&&this.socialService?this.socialService.rewardFor(this.matchId,socialId):null,roomId:this.roomId,selfId:me?.id??null,host:this.hostId===sessionId,mode:this.mode,capacity:this.capacity,rounds:this.rounds,fillBots:this.fillBots,quickMatch:this.quick,matchingDeadline:this.matchingDeadline,automatic:this.automatic,stage:this.stage,matchId:this.matchId,round:this.match?.round??0,deadline:this.deadline??0,serverTime:Date.now(),winner:this.match?.winner??null,notice:this.notice,members:[...this.members.values()].map(p=>({name:p.name,avatar:p.avatar,connected:p.connected,ready:p.ready,self:p.sessionId===sessionId,host:p.sessionId===this.hostId})),players,summary:this.stage==='finished'?{roundsPlayed:this.match.history.length,decisive:this.match.decisive,lastRounds:this.match.history.slice(-3).reverse()}:null,roundResult:['reveal','finished'].includes(this.stage)?this.roundResult??null:null,choices:this.stage==='reveal'||this.stage==='finished'?this.revealed:{}};
+    return {roundDurationMs:this.roundDurationMs||5000,economy:offerFor(this.mode,this.rounds,this.capacity),wallet:socialId&&this.socialService?this.socialService.wallet(socialId):null,reward:this.stage==='finished'&&socialId&&this.socialService?this.socialService.rewardFor(this.matchId,socialId):null,roomId:this.roomId,selfId:me?.id??null,host:this.hostId===sessionId,mode:this.mode,capacity:this.capacity,rounds:this.rounds,fillBots:this.fillBots,quickMatch:this.quick,matchingDeadline:this.matchingDeadline,automatic:this.automatic,stage:this.stage,matchId:this.matchId,round:this.match?.round??0,deadline:this.deadline??0,serverTime:Date.now(),winner:this.match?.winner??null,notice:this.notice,members:[...this.members.values()].map(p=>({name:p.name,avatar:p.avatar,connected:p.connected,ready:p.ready,self:p.sessionId===sessionId,host:p.sessionId===this.hostId})),players,summary:this.stage==='finished'?{roundsPlayed:this.match.history.length,decisive:this.match.decisive,lastRounds:this.match.history.slice(-3).reverse()}:null,roundResult:['reveal','finished'].includes(this.stage)?this.roundResult??null:null,choices:this.stage==='reveal'||this.stage==='finished'?this.revealed:{}};
   }
   sendSnapshot(client){client.send('snapshot',this.snapshot(client.sessionId));}
   publish(){this.lastPublished=Date.now();for(const client of this.clients)this.sendSnapshot(client);}

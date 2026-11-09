@@ -102,3 +102,7 @@ Moved the header friends action and notification badge into a fifth bottom tab. 
 ## Brief corner feedback after hand reveal
 
 Round feedback moved out of the arena into a compact upper-corner lane, so it never covers forearms or gestures. It waits 550 ms for the throw/flip, then fades in and out over one second and is removed after 1550 ms. Re-rendering the same round retains its original timing. The final hand remains visible for 1.6 seconds before the match-result screen. Seven-size browser tests check delay, disappearance, no arena intersection and final-hand visibility. Reviewed corner-round-effect-390.png.
+
+## Tournament tiers and decreasing round clocks
+
+Added named 1/3/5/7/9-round duel tournaments, increasing coin entry, champion coins/XP and completion XP. Party tournaments use 3–8 seats / 2–7 elimination stages while preserving the original final one-hand duel. Private rooms must fill their selected capacity or use bots. Entry quotes update on selection and recheck balance. Charged terms are persisted with the entry so settlement cannot silently use the default tier. Server round durations decrease linearly from 5s to 3s based on decisive-round or elimination progress; ties repeat that duration. Single-round and final party duels use 3s. Browser tests verify quotes, 5/4/3 progressbar maxima and rewards; pure tests cover all tiers and capacities, live SDK tests verify deadlines.
