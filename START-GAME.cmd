@@ -1,9 +1,7 @@
 @echo off
 cd /d "%~dp0"
-if not exist "dist\index.html" (
-  call npm run build
-  if errorlevel 1 goto failed
-)
+call npm run build
+if errorlevel 1 goto failed
 node scripts\standalone.mjs
 if errorlevel 1 goto failed
 start "" "%~dp0out\play.html"
