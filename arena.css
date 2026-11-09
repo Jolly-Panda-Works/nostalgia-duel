@@ -9,3 +9,6 @@
 @media(max-width:600px){.lobby-controls{order:-1}.web-viewport .lobby-controls .mode-tabs,.lobby-controls .mode-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:3px}.web-viewport .lobby-controls .mode-tabs button,.lobby-controls .mode-tabs button{min-height:65px;padding:5px 2px;gap:3px}.lobby-controls .mode-tabs strong{font-size:10px}.lobby-controls .mode-tabs small{display:none}.lobby-controls .section-label{display:none}.lobby-controls .arena-home-hint{display:none}.web-viewport .lobby-layout{gap:10px}}
 
 @media(min-width:601px){.lobby-layout{grid-template-columns:1fr 1.08fr}.lobby-layout .arena-panel{grid-column:2}.lobby-layout .lobby-controls{grid-column:1}}
+
+/* Physical navigation directions stay independent of Persian bidi layout. */
+.arena-panel #arena-carousel{display:grid;grid-template-columns:30px minmax(0,1fr) 30px;direction:ltr}.arena-panel #arena-prev{grid-column:3;grid-row:1}.arena-panel #arena-next{grid-column:1;grid-row:1}.arena-panel #arena-card-slot{grid-column:2;grid-row:1;direction:rtl}.arena-panel #arena-dots{direction:ltr;flex-direction:row-reverse}@media(max-width:600px){.arena-panel #arena-carousel{grid-template-columns:25px minmax(0,1fr) 25px}}
