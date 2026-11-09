@@ -15,7 +15,8 @@
     "start:online": "node online/server.mjs",
     "test:online": "node --test tests-online/*.test.mjs",
     "test:online:browser": "node scripts/test-online-browser.mjs",
-    "test:viewport": "node scripts/test-viewport.mjs"
+    "test:viewport": "node scripts/test-viewport.mjs",
+    "test:friends": "node scripts/test-friends-browser.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

@@ -16,10 +16,11 @@ try{
   const a=await c1.newPage(),b=await c2.newPage(),errors=[];
   for(const p of [a,b]){p.on('pageerror',error=>errors.push(error.message));await p.goto(`http://127.0.0.1:${port}`);await p.locator('#home').waitFor({state:'visible'});}
   await a.locator('#configure').click();await a.locator('#round-count').selectOption('1');await a.locator('#apply-setup').click();
+  await b.locator('#configure').click();await b.locator('[data-name="0"]').fill('ترانه');await b.locator('#apply-setup').click();
   await a.locator('#online-open').click();assert.equal(await a.locator('#online-name').inputValue(),'آرش');await a.locator('#online-create').click();
   await a.waitForFunction(()=>document.getElementById('online-room-code').value.length===8);
   const code=await a.locator('#online-room-code').inputValue();
-  await b.locator('#online-open').click();await b.locator('#online-name').fill('ترانه');await b.locator('#online-code').fill(code.toLowerCase());await b.locator('#online-join').click();
+  await b.locator('#online-open').click();await b.locator('#online-code').fill(code.toLowerCase());await b.locator('#online-join').click();
   await a.waitForFunction(()=>document.querySelectorAll('.online-member').length===2);await b.locator('.online-member').first().waitFor();
   await fit(a,'online lobby desktop');await fit(b,'online lobby mobile');
   assert.equal(await a.locator('[data-online=start]').isDisabled(),true);

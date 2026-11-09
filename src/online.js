@@ -3,7 +3,7 @@ import {labels,availableMoves,modeLabels,fa} from './core.js';
 import {tabletop,choiceArt,handArt} from './hands.js';
 
 const $=id=>document.getElementById(id);
-export function setupOnline({getOptions,escape,portrait,showHome,showRoom}){
+export function setupOnline({getOptions,getIdentity=async()=>({}),onResult=()=>{},escape,portrait,showHome,showRoom}){
   let room=null,client=null,state=null,signature='',connecting=false,reconnecting=false,ownMove=null,choiceKey='';
   const storageKey='nostalgia-online-seat';
   const configured=import.meta.env.VITE_COLYSEUS_URL;
@@ -22,13 +22,14 @@ export function setupOnline({getOptions,escape,portrait,showHome,showRoom}){
     return url.href.replace(/\/$/,'');
   }
   function errorText(error){const code=Number(error?.code);if(code===4212||code===4210)return 'اتاق پیدا نشد، پُر است یا بازی آن شروع شده است.';return 'اتصال برقرار نشد. آدرس سرور، کد اتاق و اتصال به شبکهٔ یکسان را بررسی کن.';}
-  async function connect(kind){
+  async function connect(kind,strict=false){
     if(connecting||room)return;connecting=true;
     state=null;signature='';$('online-room-code').value='';$('online-view').textContent='در حال ورود به اتاق…';
     document.querySelectorAll('#online-dialog button[data-connect]').forEach(b=>b.disabled=true);status('در حال اتصال…');
     try{
       client=new Client(endpoint());
-      const options={...getOptions(),name:($('online-name').value.trim()||getOptions().name).slice(0,24),fillBots:$('online-fill-bots').checked};
+      const identity=await getIdentity();
+      const options={...getOptions(),...identity,name:($('online-name').value.trim()||getOptions().name).slice(0,24),fillBots:$('online-fill-bots').checked};
       if(kind==='join'){
         const code=$('online-code').value.trim().replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).toUpperCase();if(!/^[A-F0-9]{8}$/.test(code))throw Error('کد اتاق معتبر نیست.');
         room=await client.joinById(code,options);
@@ -38,14 +39,14 @@ export function setupOnline({getOptions,escape,portrait,showHome,showRoom}){
         room=await client.reconnect(seat.token);
       }else if(kind==='quick')room=await client.joinOrCreate('quick_match',options);
       else room=await client.create('nostalgia',options);
-      attach(room);$('online-dialog').close();showRoom();
-    }catch(error){if(kind==='quick'&&!$('online-dialog').open)$('online-dialog').showModal();status(errorText(error));}
+      attach(room);$('online-dialog').close();showRoom();return room;
+    }catch(error){if(kind==='quick'&&!$('online-dialog').open)$('online-dialog').showModal();status(errorText(error));if(strict)throw error;}
     finally{connecting=false;$('matchmaking-start').disabled=false;document.querySelectorAll('#online-dialog button[data-connect]').forEach(b=>b.disabled=false);}
   }
   function attach(joined){
     joined.reconnection.minUptime=0;
     signature='';reconnecting=false;storeSeat();
-    joined.onMessage('snapshot',snapshot=>{if(room!==joined)return;const key=snapshot.matchId+':'+snapshot.round;if(key!==choiceKey){ownMove=null;choiceKey=key;}state=snapshot;render();});
+    joined.onMessage('snapshot',snapshot=>{if(room!==joined)return;const key=snapshot.matchId+':'+snapshot.round;if(key!==choiceKey){ownMove=null;choiceKey=key;}state=snapshot;if(state.stage==='finished')onResult(state);render();});
     joined.onDrop(()=>{if(room!==joined)return;reconnecting=true;signature='';render();});
     joined.onReconnect(()=>{if(room!==joined)return;reconnecting=false;signature='';storeSeat();joined.send('sync');});
     joined.onLeave(()=>{if(room!==joined)return;room=null;forgetSeat();$('online-view').innerHTML='<div class="network-empty"><h2>اتصال اتاق پایان یافت</h2><p>برای بازی دوباره، به لابی برگرد و اتاق تازه‌ای بساز.</p><button data-online="leave" class="primary">برگشت به لابی</button></div>';});
@@ -57,6 +58,7 @@ export function setupOnline({getOptions,escape,portrait,showHome,showRoom}){
     if(!state)return;
     $('online-network-status').textContent=reconnecting?'ارتباط قطع شده؛ تا ۳۰ ثانیه برای اتصال دوباره تلاش می‌کنیم…':state.quickMatch?'متصل به میدان بازی':'متصل به اتاق دوستان';
     document.querySelector('.room-code-label').hidden=state.quickMatch;
+    $('online-friends').textContent=state.stage==='lobby'&&!state.quickMatch?'دعوت دوستان':'دوستان';
     $('online-leave').textContent=state.stage==='matching'?'انصراف از جست‌وجو':'ترک اتاق';
     $('online-room-code').value=state.roomId;
     const key=JSON.stringify({...state,serverTime:0,reconnecting});
@@ -80,7 +82,7 @@ export function setupOnline({getOptions,escape,portrait,showHome,showRoom}){
     const clock=$('online-time');if(clock&&state.deadline){const seconds=Math.max(0,Math.ceil((state.deadline-state.serverTime)/1000));clock.textContent=`${fa(seconds)} ثانیه`;clock.classList.toggle('urgent',seconds<=2&&state.stage==='choosing');}
     if(state.stage==='matching'){const remaining=Math.max(0,state.matchingDeadline-state.serverTime);$('matching-seconds').textContent=fa(Math.ceil(remaining/1000));$('matching-progress').value=5000-remaining;}
   }
-  function choose(move){if(state?.stage==='choosing'&&!ownMove&&state.players.find(p=>p.id===state.selfId)?.active){ownMove=move;send('move',{move,round:state.round,matchId:state.matchId});signature='';render();}}
+  function choose(move){if(!availableMoves(state?.mode,state?.players.filter(p=>p.active).length).includes(move))return;if(state?.stage==='choosing'&&!ownMove&&state.players.find(p=>p.id===state.selfId)?.active){ownMove=move;send('move',{move,round:state.round,matchId:state.matchId});signature='';render();}}
   async function leave(){const previous=room;room=null;state=null;signature='';forgetSeat();$('online-leave-dialog').close();showHome();if(previous)try{await previous.leave();}catch{}}
   function requestLeave(){if(!room){showHome();return;}if(state?.stage==='matching'){void leave();return;}$('online-leave-dialog').showModal();}
   $('matchmaking-start').onclick=()=>{if(room){showRoom();return;}$('online-name').value=getOptions().name;$('matchmaking-start').disabled=true;void connect('quick');};
@@ -90,5 +92,8 @@ export function setupOnline({getOptions,escape,portrait,showHome,showRoom}){
   $('online-view').addEventListener('click',event=>{const b=event.target.closest('[data-online]');if(b){if(b.dataset.online==='ready')send('ready',!state.members.find(p=>p.self)?.ready);if(b.dataset.online==='start')send('start');if(b.dataset.online==='rematch')send('rematch');if(b.dataset.online==='leave')void leave();}const choice=event.target.closest('[data-online-move]');if(choice)choose(choice.dataset.onlineMove);});
   $('online-copy').onclick=async()=>{if(!state)return;try{await navigator.clipboard.writeText(state.roomId);$('online-network-status').textContent='کد اتاق کپی شد؛ دوستت آن را در بازی آنلاین وارد کند.';}catch{$('online-room-code').select();$('online-network-status').textContent='کد اتاق را از کادر انتخاب‌شده کپی کن.';}};
   document.addEventListener('keydown',event=>{if(!room||!state||reconnecting||event.repeat||event.target.matches('input,select')||document.querySelector('dialog[open]'))return;const i=['1','2','3','4','5'].indexOf(event.key);if(i>=0){event.preventDefault();choose((availableMoves(state.mode,state.players.filter(p=>p.active).length))[i]);}});
-  return {isActive:()=>Boolean(room),requestLeave};
+  return {isActive:()=>Boolean(room),requestLeave,getEndpoint:endpoint,
+    async prepareInvite(){if(room){if(!state||state.quickMatch||state.stage!=='lobby')throw Error('دعوت فقط در میز دوستان و پیش از شروع مسابقه ممکن است.');return room.roomId;}const created=await connect('create',true);if(!created)throw Error('ساخت میز انجام نشد.');return created.roomId;},
+    async joinInvitation(code){if(room)throw Error('ابتدا از میز فعلی خارج شو.');$('online-code').value=code;const joined=await connect('join',true);if(!joined)throw Error('ورود به میز انجام نشد.');return joined;}
+  };
 }

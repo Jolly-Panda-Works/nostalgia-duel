@@ -24,4 +24,4 @@ html=html.replace(script[0],()=>'<script type="module">'+js.replace(/<\/script/g
 const notices=[];
 for(const name of await readdir('public/licenses'))if(name.endsWith('.txt'))notices.push(name+'\n'+await readFile('public/licenses/'+name,'utf8'));
 html=html.replace('</head>',()=>`<!-- Third-party licenses\n${notices.join('\n\n').replaceAll('--','—')}\n--></head>`);
-await mkdir('out',{recursive:true});await writeFile('out/play.html',html);console.log('Standalone game: out/play.html (no server needed)');
+await mkdir('out',{recursive:true});await writeFile('out/play.html',html);console.log('Standalone online client: out/play.html (game server required)');
