@@ -1,3 +1,4 @@
+import {eligibleClients} from './fixtures.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {Client} from '@colyseus/sdk';
@@ -10,7 +11,7 @@ async function wait(room,predicate,timeout=6500){const start=Date.now();while(Da
 function move(room,state,choice,extra={}){room.send('move',{round:state.round,matchId:state.matchId,move:choice,...extra});}
 
 test('live Colyseus rooms enforce authority, privacy, reconnection, party rules and leave handling',{timeout:45000},async()=>{
-  const {server,port}=await startOnlineServer({port:0,host:'127.0.0.1'}),client=new Client(`http://127.0.0.1:${port}`),rooms=[];
+  const {server,port,social}=await startOnlineServer({port:0,host:'127.0.0.1'}),client=eligibleClients(new Client(`http://127.0.0.1:${port}`),social),rooms=[];
   const keep=room=>{rooms.push(room);return watch(room);};
   try{
     const a=keep(await client.create('nostalgia',{mode:'rps',rounds:1,name:'آرش'}));
@@ -30,7 +31,7 @@ test('live Colyseus rooms enforce authority, privacy, reconnection, party rules 
     await a.leave();const transferred=await wait(b,s=>s.members.length===1);assert.equal(transferred.host,true);
 
     const p0=keep(await client.create('nostalgia',{mode:'party',capacity:3,name:'سامان'}));
-    const p1=keep(await client.joinById(p0.roomId,{name:'رها'}));const p2=keep(await client.joinById(p0.roomId,{name:'رها'}));
+    const p1=keep(await client.joinById(p0.roomId,{name:'رها'}));const p2=keep(await client.joinById(p0.roomId,{name:'همبازی'}));
     await wait(p0,s=>s.members.length===3);assert.equal(new Set((await wait(p0,()=>true)).members.map(p=>p.name)).size,3);
     for(const p of [p0,p1,p2])p.send('ready',true);await wait(p0,s=>s.members.every(p=>p.ready));p0.send('start');const party=await wait(p0,s=>s.stage==='choosing');
     move(p0,party,'palm');move(p1,party,'back');const partyHidden=await wait(p2,s=>s.players[0].committed&&s.players[1].committed);assert.deepEqual(partyHidden.choices,{});

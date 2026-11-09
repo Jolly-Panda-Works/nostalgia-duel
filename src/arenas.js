@@ -1,0 +1,4 @@
+const names=['حیاط فیروزه','باغ سرو','بازار کاشی','ایوان شاهی','قصر خورشید','گذر نگار','کتابخانهٔ راز','رصدخانه','باغ آینه','برج ستاره','چایخانه','میدان روستا','باغ قالی','کوشک نارنج','حیاط فانوس','تالار سپیده'];
+export const arenasByMode=Object.fromEntries(['rps','advanced','party'].map((mode,group)=>{const values=mode==='party'?[3,4,5,6,7,8]:[1,3,5,7,9],offset=group===0?0:group===1?5:10;return[mode,values.map((value,index)=>({id:mode+'-'+value,name:names[offset+index],mode,rounds:mode==='party'?1:value,capacity:mode==='party'?value:2,plannedRounds:mode==='party'?value-1:value,minLevel:index+1,art:offset+index}))];}));
+export const arenasFor=mode=>arenasByMode[mode]||arenasByMode.rps;
+export const arenaFor=(mode,rounds=3,capacity=4)=>arenasFor(mode).find(a=>mode==='party'?a.capacity===capacity:a.rounds===rounds)||null;

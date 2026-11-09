@@ -1,3 +1,4 @@
+import {arenasFor} from './arenas.js';
 import {setupProfile} from './profile.js';
 import {portrait} from './avatar-art.js';
 import {setupTutorial} from './tutorial.js';
@@ -21,12 +22,13 @@ document.querySelectorAll('[data-icon]').forEach(el=>el.src=iconAssets[el.datase
 const $=id=>document.getElementById(id),escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 window.addEventListener('wallet-update',e=>{if(!e.detail)return;$('wallet-coins').textContent=fa(e.detail.coins);$('wallet-xp').textContent=fa(e.detail.xp);});
+const selectedArenas={rps:0,advanced:0,party:0};
 let mode='rps',onlineAPI=null,friends=null,scorePage=0,scoreMode='rps';
 let profile={name:defaultNames[0],avatar:0};try{const saved=JSON.parse(localStorage.getItem('nostalgia-profile'));if(saved&&typeof saved.name==='string')profile={name:saved.name.slice(0,24),avatar:Number.isInteger(saved.avatar)&&saved.avatar>=0&&saved.avatar<10?saved.avatar:0};}catch{}
 const loaded=load();let save=loaded.data;let savedMatches=[];try{savedMatches=JSON.parse(localStorage.getItem('nostalgia-saved-matches')||'[]');if(!Array.isArray(savedMatches))savedMatches=[];}catch{}
 
-function options(){return{mode,rounds:mode==='party'?1:Number($('entry-rounds').value),capacity:mode==='party'?Number($('entry-capacity').value):2,...profile,name:profile.name.trim()||defaultNames[0]};}
-function updateLobby(){$('quick-rule').textContent='یک مود انتخاب کن؛ ورودی و جایزه را ببین.';}
+function options(){const arena=arenasFor(mode)[selectedArenas[mode]]||arenasFor(mode)[0];return{mode,rounds:arena.rounds,capacity:arena.capacity,...profile,name:profile.name.trim()||defaultNames[0]};}
+function updateLobby(){$('quick-rule').textContent='یک مود انتخاب کن؛ آرنای خودت را پیدا کن.';}
 function setup(){document.querySelectorAll('[data-mode]').forEach(b=>{b.classList.toggle('selected',b.dataset.mode===mode);b.setAttribute('aria-pressed',String(b.dataset.mode===mode));});}
 function show(id){const previous=document.documentElement.dataset.screen;document.documentElement.dataset.screen=id;document.querySelectorAll('.screen').forEach(el=>el.hidden=el.id!==id);$('best').textContent=fa(Math.max(0,...save.records.filter(r=>r.mode==='rps').map(r=>r.score)));document.querySelector('.lobby-nav').hidden=id==='loading'||id==='online';document.querySelectorAll('.lobby-nav button').forEach(b=>b.removeAttribute('aria-current'));if(id==='home')$('nav-home').setAttribute('aria-current','page');if(id==='leaderboard')$('scores').setAttribute('aria-current','page');const selected={home:'nav-home','setup-dialog':'nav-players',leaderboard:'scores',guide:'help','friends-screen':'friends-open'}[id];document.querySelectorAll('.lobby-nav button').forEach(b=>{const active=b.id===selected;b.setAttribute('aria-selected',String(active));b.tabIndex=active?0:-1;if(active)b.setAttribute('aria-current','page');});const tabs=[...document.querySelectorAll('.lobby-nav [role=tab]')],index=tabs.findIndex(b=>b.id===selected);if(index>=0)document.querySelector('.lobby-nav').style.setProperty('--active-tab',String(tabs.length-1-index));if(previous!==id&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const panel=$(id),order=['home','setup-dialog','friends-screen','leaderboard','guide'],direction=order.indexOf(id)>=order.indexOf(previous)?-1:1;panel.getAnimations().forEach(a=>a.cancel());if(order.includes(id))panel.animate([{opacity:0,transform:'translateX('+direction*8+'px)'},{opacity:1,transform:'translateX(0)'}],{duration:230,easing:'cubic-bezier(.2,.7,.2,1)'});}}
 function home(){if(onlineAPI?.isActive()){onlineAPI.requestLeave();return;}show('home');}
@@ -51,7 +53,7 @@ $('modal-close').onclick=()=>$('modal').close();const renderGuide=setupTutorial(
 $('score-prev').onclick=()=>{scorePage--;board();};$('score-next').onclick=()=>{scorePage++;board();};document.querySelectorAll('[data-score-mode]').forEach(b=>b.onclick=()=>{scoreMode=b.dataset.scoreMode;scorePage=0;board();});
 
 if(!native)fitWebViewport();$('studio-about').onclick=()=>$('studio-dialog').showModal();$('studio-close').onclick=()=>$('studio-dialog').close();
-onlineAPI=setupOnline({getOptions:options,getIdentity:()=>friends.identity(),onResult:saveResult,escape,portrait,showHome:()=>show('home'),showRoom:()=>show('online')});
+onlineAPI=setupOnline({getOptions:options,getArenaIndex:()=>selectedArenas[mode],setArenaIndex:i=>{selectedArenas[mode]=i;},getIdentity:()=>friends.identity(),onResult:saveResult,escape,portrait,showHome:()=>show('home'),showRoom:()=>show('online')});
 friends=setupFriends({showFriends:()=>show('friends-screen'),getOnline:()=>onlineAPI,getOptions:options,escape,portrait});setupProfile({getFriends:()=>friends});window.addEventListener('profile-update',e=>{if(!e.detail)return;profile={name:e.detail.name,avatar:e.detail.avatar};try{localStorage.setItem('nostalgia-profile',JSON.stringify(profile));}catch{}});$('platform-label').textContent=native?'ANDROID • PORTRAIT':'WEB • LANDSCAPE';setup();updateLobby();requestAnimationFrame(()=>show('home'));friends.connect();
 
 document.querySelector('.lobby-nav').addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;const tabs=[...document.querySelectorAll('.lobby-nav [role=tab]')];const i=tabs.indexOf(e.target);if(i<0)return;e.preventDefault();const n=e.key==='Home'?0:e.key==='End'?tabs.length-1:(i+(e.key==='ArrowLeft'?1:-1)+tabs.length)%tabs.length;tabs[n].click();tabs[n].focus({preventScroll:true});});

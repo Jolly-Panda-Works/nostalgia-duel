@@ -1,10 +1,11 @@
+import {eligibleClients} from '../tests-online/fixtures.mjs';
 import {matchMaker} from '@colyseus/core';
 import {chromium} from 'playwright-core';
 import {mkdir} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import {startOnlineServer} from '../online/server.mjs';
 import {Client} from '@colyseus/sdk';
-const {server,port}=await startOnlineServer({port:0,host:'127.0.0.1'});
+const {server,port,social}=await startOnlineServer({port:0,host:'127.0.0.1'});
 let browser;const guests=[];
 async function fit(page,label){
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
@@ -18,10 +19,10 @@ try{
   for(const p of [a,b]){p.on('pageerror',error=>errors.push(error.message));await p.goto(`http://127.0.0.1:${port}`);await p.locator('#home').waitFor({state:'visible'});}
 
   await b.locator('#nav-players').click();await b.locator('#profile-edit-name').click();await b.locator('#name-input').fill('ترانه');await b.locator('#name-save').click();await b.locator('#name-dialog').waitFor({state:'hidden'});await b.locator('#nav-home').click();
-  await a.locator('#online-open').click();assert.equal(await a.locator('#online-name').inputValue(),'آرش');await a.locator('#online-create').click();
+  await a.locator('#friends-open').click();await a.locator('#friends-room-open').click();assert.equal(await a.locator('#online-name').inputValue(),'آرش');await a.locator('#online-create').click();
   await a.waitForFunction(()=>document.getElementById('online-room-code').value.length===8);
   const code=await a.locator('#online-room-code').inputValue();matchMaker.getLocalRoomById(code).rounds=1;
-  await b.locator('#online-open').click();await b.locator('#online-code').fill(code.toLowerCase());await b.locator('#online-join').click();
+  await b.locator('#friends-open').click();await b.locator('#friends-room-open').click();await b.locator('#online-code').fill(code.toLowerCase());await b.locator('#online-join').click();
   await a.waitForFunction(()=>document.querySelectorAll('.online-member').length===2);await b.locator('.online-member').first().waitFor();
   await fit(a,'online lobby desktop');await fit(b,'online lobby mobile');
   assert.equal(await a.locator('[data-online=start]').isDisabled(),true);
@@ -34,22 +35,22 @@ try{
   await mkdir('out/qa',{recursive:true});await a.screenshot({path:'out/qa/online-result-desktop.png',fullPage:true});await b.screenshot({path:'out/qa/online-result-mobile.png',fullPage:true});
   assert.equal(await b.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await a.locator('[data-online=rematch]').click();await a.locator('[data-online=ready]').waitFor();
-  await a.reload();await a.locator('#online-open').click();await a.locator('#online-resume').click();await a.waitForFunction(()=>document.querySelectorAll('.online-member').length===2);
+  await a.reload();await a.locator('#friends-open').click();await a.locator('#friends-room-open').click();await a.locator('#online-resume').click();await a.waitForFunction(()=>document.querySelectorAll('.online-member').length===2);
   assert.equal(await a.locator('[data-online=start]').count(),1);
   await a.screenshot({path:'out/qa/online-lobby-desktop.png',fullPage:true});
   await b.screenshot({path:'out/qa/online-lobby-mobile.png',fullPage:true});
   for(const p of [a,b]){if(await p.locator('#online-leave').isVisible())await p.locator('#online-leave').click();else{await p.locator('#match-settings').click();await p.locator('#match-exit').click();}await p.locator('#online-leave-confirm').click();await p.locator('#home').waitFor({state:'visible'});}
-  await a.locator('[data-mode=party]').click();await a.locator('#entry-cancel').click();await a.locator('#online-open').click();await a.locator('#online-fill-bots').check();await a.locator('#online-create').click();
+  await a.locator('[data-mode=party]').click();await a.locator('#entry-cancel').click();await a.locator('#friends-open').click();await a.locator('#friends-room-open').click();await a.locator('#online-fill-bots').check();await a.locator('#online-create').click();
   await a.waitForFunction(()=>document.getElementById('online-room-code').value.length===8);
   const partyCode=await a.locator('#online-room-code').inputValue();matchMaker.getLocalRoomById(partyCode).capacity=3;
-  await b.locator('#online-open').click();await b.locator('#online-code').fill(partyCode);await b.locator('#online-join').click();await a.waitForFunction(()=>document.querySelectorAll('.online-member').length===2);
+  await b.locator('#friends-open').click();await b.locator('#friends-room-open').click();await b.locator('#online-code').fill(partyCode);await b.locator('#online-join').click();await a.waitForFunction(()=>document.querySelectorAll('.online-member').length===2);
   await a.locator('[data-online=ready]').click();await b.locator('[data-online=ready]').click();await a.waitForFunction(()=>!document.querySelector('[data-online=start]').disabled);await a.locator('[data-online=start]').click();
   await a.locator('[data-online-move=palm]').waitFor();await b.locator('[data-online-move=back]').waitFor();await a.locator('[data-online-move=palm]').click();await b.locator('[data-online-move=back]').click();
   await a.waitForFunction(()=>document.querySelectorAll('.online-table .is-eliminated').length===1);
   await b.screenshot({path:'out/qa/online-party-mobile.png',fullPage:true});assert.equal(await b.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   for(const p of [a,b]){if(await p.locator('#online-leave').isVisible())await p.locator('#online-leave').click();else{await p.locator('#match-settings').click();await p.locator('#match-exit').click();}await p.locator('#online-leave-confirm').click();await p.locator('#home').waitFor({state:'visible'});}
-  await a.setViewportSize({width:360,height:640});await a.locator('#online-open').click();await a.locator('#online-fill-bots').uncheck();await a.locator('#online-create').click();await a.locator('[data-online=ready]').waitFor();
-  const eightCode=await a.locator('#online-room-code').inputValue();matchMaker.getLocalRoomById(eightCode).capacity=8;matchMaker.getLocalRoomById(eightCode).maxClients=8;const sdk=new Client(`http://127.0.0.1:${port}`);
+  await a.setViewportSize({width:360,height:640});await a.locator('#friends-open').click();await a.locator('#friends-room-open').click();await a.locator('#online-fill-bots').uncheck();await a.locator('#online-create').click();await a.locator('[data-online=ready]').waitFor();
+  for(const u of social.users.values())u.xp=500;const eightCode=await a.locator('#online-room-code').inputValue();matchMaker.getLocalRoomById(eightCode).capacity=8;matchMaker.getLocalRoomById(eightCode).maxClients=8;const sdk=eligibleClients(new Client(`http://127.0.0.1:${port}`),social);
   for(let i=0;i<7;i++){const guest=await sdk.joinById(eightCode,{name:`دوست ${i+1}`});guest.onMessage('snapshot',()=>{});guests.push(guest);guest.send('ready',true);}
   await a.waitForFunction(()=>document.querySelectorAll('.online-member').length===8);await fit(a,'online 8-human waiting mobile');await a.screenshot({path:'out/qa/no-scroll-online-waiting-360.png'});
   await a.locator('[data-online=ready]').click();await a.waitForFunction(()=>!document.querySelector('[data-online=start]').disabled);await a.locator('[data-online=start]').click();await a.waitForFunction(()=>document.querySelectorAll('.online-table .hand-seat').length===8);await fit(a,'online 8-player match mobile');assert.equal(await a.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await a.screenshot({path:'out/qa/online-eight-mobile.png',fullPage:true});assert.deepEqual(errors,[]);
