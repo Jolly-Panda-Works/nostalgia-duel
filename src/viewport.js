@@ -13,7 +13,10 @@ export function fitWebViewport(){
     app.style.width=`${Math.min(1240,width)}px`;
     const dock=document.querySelector('.lobby-nav'),footer=document.querySelector('footer');
     const dockTop=(dock.hidden?footer:dock).getBoundingClientRect().top;
-    const available=Math.max(100,Math.min(height,dockTop-top)-12);
+    const header=document.querySelector('header'),headerBottom=header.checkVisibility()?header.getBoundingClientRect().bottom:top;
+    const stageTop=headerBottom+(header.checkVisibility()?8:0);
+    root.style.setProperty('--stage-top',`${stageTop}px`);
+    const available=Math.max(100,Math.min(height,dockTop)-stageTop-12);
     root.style.setProperty('--content-height',`${available}px`);
     const scale=Math.min(1,width/Math.max(1,app.offsetWidth),(available-4)/Math.max(1,app.scrollHeight));
     app.style.setProperty('--stage-scale',String(scale));
