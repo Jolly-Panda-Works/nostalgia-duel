@@ -40,7 +40,7 @@ try{
   await a.screenshot({path:'out/qa/online-lobby-desktop.png',fullPage:true});
   await b.screenshot({path:'out/qa/online-lobby-mobile.png',fullPage:true});
   for(const p of [a,b]){if(await p.locator('#online-leave').isVisible())await p.locator('#online-leave').click();else{await p.locator('#match-settings').click();await p.locator('#match-exit').click();}await p.locator('#online-leave-confirm').click();await p.locator('#home').waitFor({state:'visible'});}
-  await a.locator('[data-mode=party]').click();await a.locator('#entry-cancel').click();await a.locator('#friends-open').click();await a.locator('#friends-room-open').click();await a.locator('#online-fill-bots').check();await a.locator('#online-create').click();
+  await a.locator('[data-mode=party]').click();await a.locator('#friends-open').click();await a.locator('#friends-room-open').click();await a.locator('#online-fill-bots').check();await a.locator('#online-create').click();
   await a.waitForFunction(()=>document.getElementById('online-room-code').value.length===8);
   const partyCode=await a.locator('#online-room-code').inputValue();matchMaker.getLocalRoomById(partyCode).capacity=3;
   await b.locator('#friends-open').click();await b.locator('#friends-room-open').click();await b.locator('#online-code').fill(partyCode);await b.locator('#online-join').click();await a.waitForFunction(()=>document.querySelectorAll('.online-member').length===2);
