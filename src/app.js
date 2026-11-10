@@ -1,3 +1,4 @@
+import {startGame} from './startup.js';
 import {themedIcon} from './icons.js';
 import {setupShop} from './shop.js';
 import {arenasFor} from './arenas.js';
@@ -45,6 +46,6 @@ $('score-prev').onclick=()=>{scorePage--;board();};$('score-next').onclick=()=>{
 
 if(!native)fitWebViewport();$('studio-about').onclick=()=>$('studio-dialog').showModal();$('studio-close').onclick=()=>$('studio-dialog').close();
 onlineAPI=setupOnline({getOptions:options,getArenaIndex:()=>selectedArenas[mode],setArenaIndex:i=>{selectedArenas[mode]=i;},getIdentity:()=>friends.identity(),onResult:saveResult,escape,portrait,showHome:()=>show('home'),showRoom:()=>show('online')});
-friends=setupFriends({showFriends:()=>show('friends-screen'),getOnline:()=>onlineAPI,getOptions:options,escape,portrait});setupProfile({getFriends:()=>friends});shop=setupShop({getFriends:()=>friends,escape});window.addEventListener('profile-update',e=>{if(!e.detail)return;profile={name:e.detail.name,avatar:e.detail.avatar};try{localStorage.setItem('nostalgia-profile',JSON.stringify(profile));}catch{}});$('platform-label').textContent=native?'ANDROID • PORTRAIT':'WEB • LANDSCAPE';setup();updateLobby();requestAnimationFrame(()=>show('home'));friends.connect();
+friends=setupFriends({showFriends:()=>show('friends-screen'),getOnline:()=>onlineAPI,getOptions:options,escape,portrait});setupProfile({getFriends:()=>friends});shop=setupShop({getFriends:()=>friends,escape});window.addEventListener('profile-update',e=>{if(!e.detail)return;profile={name:e.detail.name,avatar:e.detail.avatar};try{localStorage.setItem('nostalgia-profile',JSON.stringify(profile));}catch{}});$('platform-label').textContent=native?'ANDROID • PORTRAIT':'WEB • LANDSCAPE';setup();updateLobby();void startGame({prepare:()=>friends.identity(),onReady:()=>show('home')});
 
 document.querySelector('.lobby-nav').addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;const tabs=[...document.querySelectorAll('.lobby-nav [role=tab]')];const i=tabs.indexOf(e.target);if(i<0)return;e.preventDefault();const n=e.key==='Home'?0:e.key==='End'?tabs.length-1:(i+(e.key==='ArrowLeft'?1:-1)+tabs.length)%tabs.length;tabs[n].click();tabs[n].focus({preventScroll:true});});

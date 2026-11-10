@@ -1,0 +1,23 @@
+{
+  "mode": "built-in ImageGen",
+  "brief": {
+    "apk": "Edit the supplied two reference images. Reference image 1 (blue) is the EXACT DESIGN source; reference image 2 (red) supplies COLORS ONLY. Produce ONE square Android APK launcher icon, full bleed background to all four edges, no outer border or empty margin, no rounded-square mask and no device mockup.\nUse ONLY the RIGHT-HAND SQUARE emblem from the blue reference: the two opposing hands (LEFT fist, RIGHT open paper palm), same orientation, exact positions, gold toranj outline, floral stems/leaves and miniature manuscript texture. Preserve the blue reference's fist/palm gesture pairing and its floral composition. DO NOT use the crossed forearms, scissors gesture, or star from the red reference.\nRecolor the main blue field to the rich deep Persian madder/crimson red of reference 2. Keep antique gold outlines and ornament, warm ivory skin, turquoise foliage accents; cuffs can keep contrasting small lapis and red accents like reference 2. Elegant highly polished Persian miniature game icon. No lettering anywhere. One icon ONLY, not a pair, not a comparison, no typography. Square 1024x1024 or higher. Main emblem large and centered, fully visible with safe breathing room inside its full-bleed red background; no separate frame.",
+    "type": "Edit the supplied red reference image. Extract and recreate ONLY the Persian TYPOGRAPHIC WORDMARK from the LEFT website logo of reference 2: exact text «دوئلِ ترنج» without guillemets. Keep the reference's elegant Persian letterforms and clear readability. Antique gold / warm ivory lettering on a rich crimson-red silhouette following the letter contours, thin gold edging, with a modest Persian floral underline in red and antique gold and very small lapis accents matching the reference. Make the dominant identity RED and gold.\nCompletely omit the hand emblem, toranj medallion, fist, scissors, star, icon square, badge at the side and every other picture. This must be a standalone horizontal wordmark only. Tight useful composition, entirely on genuine transparent alpha background. No presentation board, no background rectangle, no labels, no English, no added slogan. One clean high-resolution logo asset.",
+    "web": "From the supplied red APK icon, create a WEBSITE SYMBOL ONLY with actual transparent background. Preserve exactly the central emblem: same two opposing hands (left fist, right open palm), same red-and-antique-gold toranj shape, floral ornament, skin colors, cuffs, miniature painting style and proportions.\nRemove ONLY the outer square background and corner decoration outside the central toranj silhouette, so there is genuine transparent alpha outside the beautiful toranj silhouette. Keep the red field INSIDE the toranj shape. No typography or letters anywhere, no wordmark beside it, no separate box, no rounded rectangle, no mockup. Centered isolated emblem with a small clean transparent margin and all ornament contained. One symbol only."
+  },
+  "typographyCleanup": "Clean this existing Persian wordmark asset. Preserve the exact wordmark text دوئلِ ترنج, the gold letters, the red silhouette tightly following letters, gold outline and small floral underline EXACTLY. Remove ALL cream/beige/white glow, haze, cloud, shadow, outer bloom and colored fringe OUTSIDE the hard red/gold silhouette. Outside must be completely empty genuine transparent alpha, including above the letters and around the underline. Crisp cut-out edges. Do not add any background, object, hand, emblem, extra ornament or text. Maintain wide composition. This is a typography-only transparent PNG logo, not a presentation.",
+  "files": [
+    {
+      "id": "apk",
+      "source": "C:\\Users\\Ania\\.codex\\generated_images\\01a1bfcc-3799-7dd3-b3ff-02d6aebebc1d\\exec-64190feb-2277-462b-a23d-55419f9d1f1f.png"
+    },
+    {
+      "id": "wordmark",
+      "source": "C:\\Users\\Ania\\.codex\\generated_images\\01a1bfcc-3799-7dd3-b3ff-02d6aebebc1d\\exec-e057b55b-6e4c-4a3a-bfaa-001c18411802.png"
+    },
+    {
+      "id": "web-symbol",
+      "source": "C:\\Users\\Ania\\.codex\\generated_images\\01a1bfcc-3799-7dd3-b3ff-02d6aebebc1d\\exec-6b42ff34-41b7-425f-9455-b07f5d4681b9.png"
+    }
+  ]
+}

@@ -20,6 +20,7 @@ for(const font of [...css.matchAll(/url\((["']?)([^)'"\s]+\.(?:woff2|webp|png|jp
 for(const asset of [...html.matchAll(/<img\b[^>]*src="([^"\s]+\.(?:webp|png|jpe?g|svg))"[^>]*>/g)]){
   const file=path.resolve('dist',asset[1]);const data=await readFile(file);html=html.replace(asset[0],()=>asset[0].replace(asset[1],`data:${mime[path.extname(file)]};base64,${data.toString('base64')}`));
 }
+for(const icon of [...html.matchAll(/<link\b[^>]*rel="icon"[^>]*href="([^"]+\.(?:png|webp|svg))"[^>]*>/g)]){const file=path.resolve('dist',icon[1]),data=await readFile(file);html=html.replace(icon[0],()=>icon[0].replace(icon[1],`data:${mime[path.extname(file)]};base64,${data.toString('base64')}`));}
 html=html.replace(script[0],()=>'<script type="module">'+js.replace(/<\/script/gi,'<\\/script')+'</script>').replace(style[0],()=>'<style>'+css+'</style>');
 const notices=[];
 for(const name of await readdir('public/licenses'))if(name.endsWith('.txt'))notices.push(name+'\n'+await readFile('public/licenses/'+name,'utf8'));

@@ -1,3 +1,4 @@
+import {applyAndroidBranding} from './android-branding.mjs';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { config } from './config.mjs';
@@ -10,6 +11,7 @@ const npm = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const run = args => execFileSync(npm,args,{stdio:'inherit',shell:process.platform === 'win32'});
 if (!existsSync('android')) run(['cap','add','android']);
 run(['cap','sync','android']);
+await applyAndroidBranding();
 let gradle = readFileSync('android/app/build.gradle','utf8');
 gradle = gradle.replace(/versionCode\s+\d+/, `versionCode ${versionCode(version)}`).replace(/versionName\s+"[^"]*"/,`versionName "${version}"`);
 if (!gradle.includes('// Jolly Panda debug variant')) {

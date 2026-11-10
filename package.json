@@ -18,7 +18,8 @@
     "test:viewport": "node scripts/test-viewport.mjs",
     "test:friends": "node scripts/test-friends-browser.mjs",
     "test:arenas": "node scripts/test-arenas-browser.mjs",
-    "test:shop": "node scripts/test-shop-browser.mjs"
+    "test:shop": "node scripts/test-shop-browser.mjs",
+    "test:startup": "node scripts/test-startup-browser.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
