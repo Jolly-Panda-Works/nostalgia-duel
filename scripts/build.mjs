@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync, copyFileSync, readdirSync, chmodSync, mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync, copyFileSync, readdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -22,23 +22,30 @@ const signingDir = signed ? mkdtempSync(join(process.env.RUNNER_TEMP || tmpdir()
 try {
   const tasks = signed ? ['assembleRelease', 'bundleRelease'] : ['assembleDebug'];
   const gradleEnv = {...process.env};
+  const signing = [];
   if (signingDir) {
     const path = join(signingDir, 'release.keystore');
     writeFileSync(path, Buffer.from(process.env.KEYSTORE_BASE64, 'base64'), {mode: 0o600});
-    Object.assign(gradleEnv, {
-      'ORG_GRADLE_PROJECT_android.injected.signing.store.file': path,
-      'ORG_GRADLE_PROJECT_android.injected.signing.store.password': process.env.KEYSTORE_PASSWORD,
-      'ORG_GRADLE_PROJECT_android.injected.signing.key.alias': process.env.KEY_ALIAS,
-      'ORG_GRADLE_PROJECT_android.injected.signing.key.password': process.env.KEY_PASSWORD,
-    });
+    signing.push(
+      `-Pandroid.injected.signing.store.file=${path}`,
+      `-Pandroid.injected.signing.store.password=${process.env.KEYSTORE_PASSWORD}`,
+      `-Pandroid.injected.signing.key.alias=${process.env.KEY_ALIAS}`,
+      `-Pandroid.injected.signing.key.password=${process.env.KEY_PASSWORD}`,
+    );
     for (const secret of secrets) delete gradleEnv[secret];
   }
   const windows = process.platform === 'win32';
-  if (!windows) chmodSync('android/gradlew', 0o755);
-  const result = spawnSync(windows ? 'gradlew.bat' : './gradlew', [...tasks, '--no-daemon'], {
-    cwd: 'android', shell: windows, stdio: 'inherit', env: gradleEnv,
+  const java = process.env.JAVA_HOME
+    ? join(process.env.JAVA_HOME, 'bin', windows ? 'java.exe' : 'java')
+    : 'java';
+  // A direct wrapper invocation preserves the signing arguments without shell interpolation.
+  const result = spawnSync(java, [
+    '-Dorg.gradle.appname=gradlew', '-classpath', 'gradle/wrapper/gradle-wrapper.jar',
+    'org.gradle.wrapper.GradleWrapperMain', ...tasks, '--no-daemon', ...signing,
+  ], {
+    cwd: 'android', stdio: 'inherit', env: gradleEnv,
   });
-  if (result.status !== 0) throw Error('Gradle build failed', {cause: result.error});
+  if (result.status !== 0) throw Error('Gradle build failed');
 } finally {
   if (signingDir) rmSync(signingDir, {recursive:true, force:true});
 }
