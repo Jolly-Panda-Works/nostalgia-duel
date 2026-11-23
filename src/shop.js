@@ -1,8 +1,11 @@
+import invoice from './shop-invoice.html?raw';
 import {themedIcon} from './icons.js';
 import QRCode from 'qrcode';
 import {fa} from './core.js';
 const $=id=>document.getElementById(id);
 export function setupShop({getFriends,escape}){
+ document.body.insertAdjacentHTML('beforeend',invoice);
+ document.querySelector('.shop-intro').textContent='بسته را انتخاب کن و پس از پرداخت، شناسهٔ تراکنش را وارد کن.';
  let catalog=null,network='bnb',order=null,busy=false,polling=false,qrVersion=0;
  const request=(path='',method='GET',body)=>getFriends().shopRequest(path,method,body);
  function status(message){$('shop-status').textContent=message;}

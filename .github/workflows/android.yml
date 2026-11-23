@@ -1,8 +1,5 @@
 name: Android and Iranian stores
 on:
-  push:
-    branches: [main, Iranian-store]
-    paths-ignore: ['**.md', 'docs/**']
   workflow_dispatch:
     inputs:
       bump:

@@ -7,7 +7,8 @@ export const defaultNames=['آرش','ترانه','سامان','رها','نیما
 export const icons={rock:'✊',paper:'✋',scissors:'✌️',palm:'✋',back:'🤚',lizard:'🦎',spock:'🖖'};
 export const labels={rock:'سنگ',paper:'کاغذ',scissors:'قیچی',palm:'کف دست',back:'پشت دست',lizard:'مارمولک',spock:'اسپاک'};
 export const avatars=[{id:'red',name:'کلاه قرمزی',color:'#eb755c'},{id:'zizi',name:'زی‌زی‌گولو',color:'#a58ac8'},{id:'pesar',name:'پسرخاله',color:'#e0b65e'},{id:'guest',name:'مهمان دورهمی',color:'#78aaa5'}];
-export const fa=n=>n.toLocaleString('fa-IR');
+export const fa=n=>n.toLocaleString('fa-IR-u-nu-arabext');
+export const persianDigits=text=>String(text).replace(/[0-9٠-٩]/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d.charCodeAt(0)-(d<='9'?48:1632)]).replace(/(?<=\d),(?=\d)/g,'٬');
 export function outcome(a,b,mode='rps'){const valid=availableMoves(mode);if(!valid.includes(a)||!valid.includes(b))throw Error('Invalid move');return a===b?0:beats[a].includes(b)?1:-1;}
 export function uniqueLoser(choices){if(choices.length<3||choices.some(c=>!['palm','back'].includes(c)))throw Error('Invalid party choices');const palms=choices.flatMap((c,i)=>c==='palm'?[i]:[]);if(palms.length===1)return palms[0];if(palms.length===choices.length-1)return choices.findIndex(c=>c==='back');return -1;}
 export function createMatch(mode,players,rounds=3){if(!['rps','advanced','party'].includes(mode)||players.length<(mode==='party'?3:2)||players.length>(mode==='party'?8:2)||!players.some(p=>!p.bot))throw Error('Invalid players');if(![1,3,5,7,9].includes(rounds))throw Error('Invalid rounds');return{mode,rounds,players:players.map((p,i)=>({...p,id:i,active:true,wins:0,streak:0,score:0})),round:1,decisive:0,winner:null,history:[]};}

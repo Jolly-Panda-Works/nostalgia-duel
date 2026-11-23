@@ -9,7 +9,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 const root = new URL("../", import.meta.url);
 const settings = JSON.parse(readFileSync(new URL("bazaar.config.json", root), "utf8"));
 const rsaKey = (process.env.BAZAAR_RSA_KEY || settings.rsaKey || "").trim();
-if (!/^[A-Za-z0-9+/=]{100,}$/.test(rsaKey)) {
+if ((!rsaKey && process.env.BAZAAR_DRAFT !== 'true') || (rsaKey && !/^[A-Za-z0-9+/=]{100,}$/.test(rsaKey))) {
   console.error("The Bazaar RSA key is missing or malformed (bazaar.config.json or BAZAAR_RSA_KEY).");
   process.exit(1);
 }
@@ -94,7 +94,9 @@ if (!props.includes("kotlin.jvm.target.validation.mode")) {
 
 // RSA key resource
 let strings = read("android/app/src/main/res/values/strings.xml");
-if (!strings.includes("bazaar_rsa_key")) {
+if (strings.includes("bazaar_rsa_key")) {
+  strings=strings.replace(/<string name="bazaar_rsa_key"[^>]*>[\s\S]*?<\/string>/,`<string name="bazaar_rsa_key" translatable="false">${rsaKey}</string>`);write("android/app/src/main/res/values/strings.xml",strings);
+} else {
   strings = strings.replace("</resources>", `    <string name="bazaar_rsa_key" translatable="false">${rsaKey}</string>\n</resources>`);
   write("android/app/src/main/res/values/strings.xml", strings);
 }
