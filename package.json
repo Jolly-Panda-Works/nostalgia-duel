@@ -17,7 +17,7 @@
     "test:online:browser": "node scripts/test-online-browser.mjs",
     "test:viewport": "node scripts/test-viewport.mjs",
     "test:friends": "node scripts/test-friends-browser.mjs",
-    "test:arenas": "node scripts/test-arenas-browser.mjs",
+    "test:entries": "node scripts/test-entry-browser.mjs",
     "test:shop": "node scripts/test-shop-browser.mjs",
     "test:startup": "node scripts/test-startup-browser.mjs"
   },

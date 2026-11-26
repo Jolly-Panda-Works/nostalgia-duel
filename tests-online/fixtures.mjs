@@ -4,7 +4,6 @@ export function eligibleClients(client,social){
   const original=client[method].bind(client);
   client[method]=async(name,options={})=>{
    const registered=await social.register(options.name||'آزمایشگر',options.avatar||0);
-   social.authenticate(registered.token).xp=500;
    return original(name,{...options,socialToken:registered.token});
   };
  }

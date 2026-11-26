@@ -1,3 +1,4 @@
+export function matchFormat(mode){return mode==='party'?{capacity:3,rounds:1}:{capacity:2,rounds:3};}
 export const moves=['rock','paper','scissors'];
 export const advancedMoves=[...moves,'lizard','spock'];
 export const modeLabels={rps:'سنگ کاغذ قیچی',advanced:'دوئل پیشرفته',party:'پلم پولوم پلیچ'};
@@ -17,3 +18,11 @@ export function resolve(match,choices){if(match.winner!==null)throw Error('Match
   if(match.winner!==null)match.players.find(p=>p.id===match.winner).score+=200;
   match.history.push({round:match.round,choices:{...choices},eliminated:eliminated?.id??null});return{message,eliminated,finished:match.winner!==null};}
 export function cleanSave(value){const valid=r=>r&&['rps','advanced','party'].includes(r.mode)&&typeof r.name==='string'&&r.name.length<=24&&Number.isSafeInteger(r.score)&&r.score>=0&&r.score<=1000000&&Number.isSafeInteger(r.rounds)&&r.rounds>0;const records=(Array.isArray(value?.records)?value.records:[]).filter(valid).map(r=>({mode:r.mode,name:r.name,score:r.score,rounds:r.rounds}));return{version:2,records:['rps','advanced','party'].flatMap(mode=>records.filter(r=>r.mode===mode).sort((a,b)=>b.score-a.score).slice(0,10))};}
+
+export function resolveRound(match,choices){
+    const before=match.players.map(p=>({wins:p.wins,score:p.score}));
+    const result=resolve(match,choices);
+    const scorer=match.players.find(p=>p.wins>before[p.id].wins);
+    const championBonus=scorer&&match.winner===scorer.id?200:0;
+    return {message:result.message,round:match.round,winnerId:scorer?.id??null,eliminatedId:result.eliminated?.id??null,tie:!scorer&&!result.eliminated,points:scorer?scorer.score-before[scorer.id].score-championBonus:0,championBonus};
+}

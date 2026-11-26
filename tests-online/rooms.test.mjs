@@ -25,7 +25,7 @@ test('live Colyseus rooms enforce authority, privacy, reconnection, party rules 
     const hidden=await wait(b,s=>s.players[0].committed);assert.deepEqual(hidden.choices,{});assert.equal(hidden.roundResult,null);assert.equal(hidden.summary,null);assert.equal('selected' in hidden,false);
     const reconnect=new Promise(resolve=>a.onReconnect.once(resolve));const oldSession=a.sessionId;void a.leave(false);await Promise.race([reconnect,sleep(6000).then(()=>{throw Error('Reconnect timed out');})]);
     a.send('sync');const restored=await wait(a,s=>s.stage==='choosing'&&s.players[0].committed);assert.equal(a.sessionId,oldSession);assert.deepEqual(restored.choices,{});
-    move(b,choosing,'scissors');const result=await wait(a,s=>s.stage==='finished');assert.equal(result.winner,0);assert.equal(result.roundResult.winnerId,0);assert.equal(result.roundResult.points,100);assert.equal(result.roundResult.championBonus,200);assert.equal(result.summary.roundsPlayed,1);assert.equal(result.summary.lastRounds[0].choices[0],'rock');assert.equal(result.choices[0],'rock');assert.equal(result.players[0].score,300);
+    move(b,choosing,'scissors');assert.equal(choosing.rounds,3);for(let round=2;round<=3;round++){const current=await wait(a,s=>s.stage==='choosing'&&s.round===round);move(a,current,'rock');move(b,current,'scissors');}const result=await wait(a,s=>s.stage==='finished');assert.equal(result.winner,0);assert.equal(result.roundResult.winnerId,0);assert.equal(result.roundResult.points,150);assert.equal(result.roundResult.championBonus,200);assert.equal(result.summary.roundsPlayed,3);assert.equal(result.summary.lastRounds[0].choices[0],'rock');assert.equal(result.choices[0],'rock');assert.equal(result.players[0].score,575);
     await assert.rejects(()=>client.joinById(a.roomId,{name:'نباید وارد شود'}));
     b.send('rematch');await sleep(80);assert.equal((await wait(a,()=>true)).stage,'finished');a.send('rematch');await wait(b,s=>s.stage==='lobby');
     await a.leave();const transferred=await wait(b,s=>s.members.length===1);assert.equal(transferred.host,true);
@@ -44,9 +44,9 @@ test('live Colyseus rooms enforce authority, privacy, reconnection, party rules 
     const cancelled=await wait(c1,s=>s.stage==='lobby'&&s.members.length===1);assert.match(cancelled.notice,/لغو/);assert.equal(cancelled.host,true);assert.equal(cancelled.players.length,0);
 
     const crowd=[keep(await client.create('nostalgia',{mode:'party',capacity:8,name:'آرش'}))];
-    for(let i=1;i<8;i++)crowd.push(keep(await client.joinById(crowd[0].roomId,{name:`دوست ${i}`})));
-    await wait(crowd[0],s=>s.members.length===8);for(const p of crowd)p.send('ready',true);await wait(crowd[0],s=>s.members.every(p=>p.ready));crowd[0].send('start');const eight=await wait(crowd[0],s=>s.stage==='choosing');
-    for(let i=0;i<8;i++)move(crowd[i],eight,i===0?'palm':'back');const eightResult=await wait(crowd[7],s=>s.stage==='reveal');assert.equal(eightResult.players.length,8);assert.equal(eightResult.players.filter(p=>p.active).length,7);assert.equal(eightResult.players[0].active,false);
+    for(let i=1;i<3;i++)crowd.push(keep(await client.joinById(crowd[0].roomId,{name:'هم‌بازی '+i})));
+    assert.equal((await wait(crowd[0],s=>s.members.length===3)).capacity,3);
+    await assert.rejects(()=>client.joinById(crowd[0].roomId,{name:'چهارم'}));
 
     const spectator=keep(await client.create('nostalgia',{mode:'party',capacity:3,fillBots:true,name:'ناظر'}));await wait(spectator,s=>s.members.length===1);
     const botFixture=matchMaker.getLocalRoomById(spectator.roomId);let draw=0;

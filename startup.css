@@ -1,1 +1,14 @@
 body.booting>header,body.booting>#app,body.booting>.lobby-nav,body.booting>footer,body.booting>.grain{visibility:hidden;pointer-events:none}#boot-screen{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;background:#fff;height:100dvh;overflow:hidden}#studio-splash{text-align:center}#splash-studio-logo{display:block;width:min(34vw,180px);height:min(34vw,180px);object-fit:contain}#game-loader{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:radial-gradient(ellipse at center,#f6ebce,#dfc89e);color:#684b2c;text-align:center;padding:24px}.loader-symbol{width:min(33vmin,190px);height:min(33vmin,190px);object-fit:contain}.loader-wordmark{width:min(62vw,310px);height:110px;object-fit:contain}.boot-track{display:flex;gap:10px;align-items:center;width:min(360px,80vw)}#boot-progress{width:100%;height:13px;accent-color:#8c2825;direction:ltr}#boot-percent{min-width:42px;font-size:14px;color:#8c2825}#boot-status{font-size:13px;min-height:35px;max-width:360px;line-height:1.8;margin:2px 0}#boot-retry{font-size:14px;padding:10px 22px}.brand .branding-symbol{width:37px;height:37px;object-fit:contain}.brand .branding-wordmark{width:145px;height:49px;object-fit:contain}.brand.game-brand{display:flex;align-items:center;gap:9px;padding:0}.sr-brand{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}@media(max-width:600px){.brand .branding-symbol{width:29px;height:29px}.brand .branding-wordmark{width:109px;height:40px}.brand.game-brand{gap:4px}.loader-wordmark{height:85px}#boot-status{font-size:12px}.loader-symbol{width:155px;height:155px}}
+
+.game-tagline{margin:0;color:#72352b;font-size:clamp(13px,2.2vw,18px);line-height:1.7;text-wrap:balance}
+@media(max-height:520px){#game-loader{gap:5px;padding:8px}.loader-symbol{height:24dvh}.loader-wordmark{height:14dvh}}
+
+.loader-scene{display:grid;place-items:center}
+.loader-scene .loader-symbol{width:min(28vw,20dvh);height:auto}
+.loader-character{position:absolute;bottom:0;width:min(29vw,57dvh);height:auto;pointer-events:none}
+.loader-character:first-child{left:2vw}
+.loader-character:last-child{right:2vw}
+@media(orientation:portrait){
+  #game-loader{padding-bottom:min(36vw,24dvh)}
+  .loader-character{width:min(44vw,32dvh)}
+}
