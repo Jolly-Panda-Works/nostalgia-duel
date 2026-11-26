@@ -1,0 +1,102 @@
+<Rive version="1" kind="fragment">
+  <Artboard width="96" height="96" name="Toranj">
+    <Node x="48" y="48" name="Medallion" id="0:3">
+      <Shape rotation="0.785398" name="Gold center">
+        <Rectangle width="13" height="13"/>
+        <Fill><SolidColor colorValue="FFFFD685"/></Fill>
+      </Shape>
+      <Shape name="Crimson enamel">
+        <Star width="40" height="40" points="8" innerRadius="0.76"/>
+        <Fill><SolidColor colorValue="FF942E36"/></Fill>
+      </Shape>
+      <Shape name="Gilded rim">
+        <Star width="48" height="48" points="8" innerRadius="0.76"/>
+        <Fill><SolidColor colorValue="FFE2B755"/></Fill>
+      </Shape>
+    </Node>
+    <LinearAnimation duration="30" name="Seal">
+      <KeyedObject objectId="0:3">
+        <KeyedProperty property="rotation">
+          <KeyFrameDouble value="-0.65" interpolationType="linear"/>
+          <KeyFrameDouble frame="12" value="0.08" interpolationType="linear"/>
+          <KeyFrameDouble frame="30" value="0"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleX">
+          <KeyFrameDouble value="0.18" interpolationType="linear"/>
+          <KeyFrameDouble frame="10" value="1.3" interpolationType="linear"/>
+          <KeyFrameDouble frame="17" value="0.95" interpolationType="linear"/>
+          <KeyFrameDouble frame="24" value="1" interpolationType="linear"/>
+          <KeyFrameDouble frame="30" value="0.8"/>
+        </KeyedProperty>
+        <KeyedProperty property="scaleY">
+          <KeyFrameDouble value="0.18" interpolationType="linear"/>
+          <KeyFrameDouble frame="10" value="1.3" interpolationType="linear"/>
+          <KeyFrameDouble frame="17" value="0.95" interpolationType="linear"/>
+          <KeyFrameDouble frame="24" value="1" interpolationType="linear"/>
+          <KeyFrameDouble frame="30" value="0.8"/>
+        </KeyedProperty>
+        <KeyedProperty property="opacity">
+          <KeyFrameDouble value="0" interpolationType="linear"/>
+          <KeyFrameDouble frame="5" value="1" interpolationType="linear"/>
+          <KeyFrameDouble frame="23" value="1" interpolationType="linear"/>
+          <KeyFrameDouble frame="30" value="0"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <Node name="Transition progress" id="0:4"/>
+    <LinearAnimation name="PanelOpen" duration="14">
+      <KeyedObject objectId="0:4">
+        <KeyedProperty property="x">
+          <KeyFrameDouble value="0" interpolationType="linear"/>
+          <KeyFrameDouble frame="8" value="0.91" interpolationType="linear"/>
+          <KeyFrameDouble frame="14" value="1"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation name="PanelClose" duration="10">
+      <KeyedObject objectId="0:4">
+        <KeyedProperty property="x">
+          <KeyFrameDouble value="0" interpolationType="linear"/>
+          <KeyFrameDouble frame="5" value="0.26" interpolationType="linear"/>
+          <KeyFrameDouble frame="10" value="1"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation name="TabSwitch" duration="16">
+      <KeyedObject objectId="0:4">
+        <KeyedProperty property="x">
+          <KeyFrameDouble value="0" interpolationType="linear"/>
+          <KeyFrameDouble frame="9" value="0.89" interpolationType="linear"/>
+          <KeyFrameDouble frame="16" value="1"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation name="MoveCommit" duration="12">
+      <KeyedObject objectId="0:4">
+        <KeyedProperty property="x">
+          <KeyFrameDouble value="0" interpolationType="linear"/>
+          <KeyFrameDouble frame="6" value="0.83" interpolationType="linear"/>
+          <KeyFrameDouble frame="12" value="1"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation name="RoundReveal" duration="22">
+      <KeyedObject objectId="0:4">
+        <KeyedProperty property="x">
+          <KeyFrameDouble value="0" interpolationType="linear"/>
+          <KeyFrameDouble frame="12" value="0.92" interpolationType="linear"/>
+          <KeyFrameDouble frame="22" value="1"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+    <LinearAnimation name="Purchase" duration="32">
+      <KeyedObject objectId="0:4">
+        <KeyedProperty property="x">
+          <KeyFrameDouble value="0" interpolationType="linear"/>
+          <KeyFrameDouble frame="15" value="0.85" interpolationType="linear"/>
+          <KeyFrameDouble frame="32" value="1"/>
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+  </Artboard>
+</Rive>

@@ -18,7 +18,7 @@ export async function startOnlineServer({port=Number(process.env.PORT||2567),hos
     app.use(express.static(path.join(root,'dist'),{index:'index.html'}));
   }});
   server.define('nostalgia',socialRoom(GameRoom,social));
-  server.define('quick_match',socialRoom(QuickMatchRoom,social)).filterBy(['mode','rounds','capacity']);
+  server.define('quick_match',socialRoom(QuickMatchRoom,social)).filterBy(['mode','entry']);
   await server.listen(port,host);const shopTimer=setInterval(()=>void social.shop.poll(),20000);shopTimer.unref();server.onShutdown(()=>clearInterval(shopTimer));
   return {server,social,port:transport.server.address().port};
 }

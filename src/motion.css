@@ -1,0 +1,37 @@
+.seal-host { position: relative; }
+.toranj-seal {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  top: 50%;
+  inset-inline-end: 0;
+  transform: translateY(-50%);
+  width: 3rem;
+  aspect-ratio: 1;
+  background: url('../assets/motion/toranj/seal-strip.webp') left center / 1600% 100% no-repeat;
+  animation: toranj-seal 500ms steps(15, end) both;
+}
+@keyframes toranj-seal { to { background-position: right center; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog {
+    opacity: 0;
+    translate: 0 8px;
+    transition: opacity var(--PanelClose-duration) var(--PanelClose-ease),
+      translate var(--PanelClose-duration) var(--PanelClose-ease),
+      overlay var(--PanelClose-duration) allow-discrete,
+      display var(--PanelClose-duration) allow-discrete;
+  }
+  dialog[open] {
+    opacity: 1;
+    translate: 0 0;
+    transition-duration: var(--PanelOpen-duration);
+    transition-timing-function: var(--PanelOpen-ease);
+  }
+  @starting-style {
+    dialog[open] { opacity: 0; translate: 0 12px; }
+  }
+  .lobby-nav::before {
+    transition: transform var(--TabSwitch-duration) var(--TabSwitch-ease);
+  }
+}

@@ -1,0 +1,17 @@
+.entry-panel{padding:18px;background:#f3e5c5;border:1px solid #ae925d;border-radius:10px;text-align:center}
+.entry-panel h2{font-size:20px;margin:0}.entry-panel p{margin:6px 0;font-size:12px}
+#entry-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0}
+#entry-options button{padding:9px 3px;border:1px solid #b99d69;border-radius:7px;background:#fff0cc;color:#59412d}
+#entry-options [aria-pressed=true]{background:#76523a;color:#ffefcb;box-shadow:inset 0 0 0 2px #d9b970}
+#entry-options small{display:block;margin-top:4px;font-size:11px}
+
+#entry-confirm{width:100%;min-height:40px}#entry-status:empty{display:none}
+#entry-confirm{margin-top:10px}.lobby-layout>.entry-panel,.lobby-layout>.lobby-controls{grid-row:1}
+@media(min-width:601px){.lobby-layout>.entry-panel{grid-column:2}.lobby-layout>.lobby-controls{grid-column:1}}
+@media(max-width:600px){.lobby-layout,.web-viewport #home .lobby-layout{display:flex;flex-direction:column;gap:8px}.entry-panel{order:1;padding:10px}.entry-panel h2{font-size:16px}#entry-options{margin:7px 0}#entry-options button{padding:5px 2px}}
+
+.offline-only,body.offline #profile-mode-stats,body.offline #profile-totals,body.offline #friend-alert,body.offline .wallet-pill>span,body.offline #entry-options{display:none!important}
+body.offline #offline-stats{display:inline-block!important}
+#connection-dialog{width:min(410px,92vw);text-align:center;padding:20px}
+#connection-dialog>div{display:flex;justify-content:center;gap:10px}
+#connection-message{white-space:pre-line;line-height:1.8;font-size:clamp(13px,3.4vw,16px)}

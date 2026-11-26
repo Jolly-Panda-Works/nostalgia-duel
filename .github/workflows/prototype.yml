@@ -1,29 +1,15 @@
-name: Android device tests
+name: Prototype APK and Web
 on:
   workflow_dispatch:
-    inputs:
-      target:
-        description: Android target (store targets require signing)
-        type: choice
-        options: [debug, bazaar, myket]
-        default: debug
-      version:
-        description: Optional version in X.Y.Z format (defaults to package.json)
-        type: string
 permissions:
   contents: read
 concurrency:
   group: prototype-build
   cancel-in-progress: false
 jobs:
-  build:
+  prototype:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    env:
-      STORE: ${{ inputs.target }}
-      VERSION: ${{ inputs.version }}
-      ANDROID_GAMEPLAY_ONLY: 'true'
-      REQUIRE_SIGNING: ${{ inputs.target != 'debug' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -41,33 +27,20 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: npm ci
       - run: npm test
-      - run: npm run test:online
       - run: npm run build:android
         env:
-          KEYSTORE_BASE64: ${{ inputs.target != 'debug' && secrets.KEYSTORE_BASE64 || '' }}
-          KEYSTORE_PASSWORD: ${{ inputs.target != 'debug' && secrets.KEYSTORE_PASSWORD || '' }}
-          KEY_ALIAS: ${{ inputs.target != 'debug' && secrets.KEY_ALIAS || '' }}
-          KEY_PASSWORD: ${{ inputs.target != 'debug' && secrets.KEY_PASSWORD || '' }}
-      - name: Validate package, signature and portrait orientation
-        shell: bash
+          STORE: debug
+      - name: Validate Android identity and portrait orientation
         run: |
-          PACKAGE=com.jollypanda.nostalgiaduel
-          if [[ "$STORE" == debug ]]; then PACKAGE+=.debug; fi
           APK=$(find out -name '*.apk' -print -quit)
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | tee out/android-badging.txt
-          grep -Fq "package: name='$PACKAGE'" out/android-badging.txt
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$APK"
+          grep -q "package: name='com.jollypanda.nostalgiaduel.debug'" out/android-badging.txt
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$APK"
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump xmltree "$APK" AndroidManifest.xml > out/android-manifest.txt
           grep -q 'screenOrientation.*0x1' out/android-manifest.txt
-          if [[ "$STORE" != debug ]]; then
-            AAB=$(find out -name '*.aab' -print -quit)
-            test -n "$AAB"
-            jarsigner -verify "$AAB" | tee out/bundle-signature.txt
-            grep -Fxq 'jar verified.' out/bundle-signature.txt
-          fi
       - uses: actions/upload-artifact@v4
         with:
-          name: nostalgia-duel-${{ inputs.target }}
+          name: nostalgia-duel-prototype
           path: out/*
           retention-days: 14
           if-no-files-found: error

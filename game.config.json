@@ -4,7 +4,7 @@
   "appId": "com.jollypanda.nostalgiaduel",
   "web": true,
   "orientation": "portrait",
-  "billing": true,
+  "billing": false,
   "stores": [
     "bazaar",
     "myket"

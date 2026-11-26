@@ -1,3 +1,4 @@
+export function matchFormat(mode){return mode==='party'?{capacity:3,rounds:1}:{capacity:2,rounds:3};}
 export const moves=['rock','paper','scissors'];
 export const advancedMoves=[...moves,'lizard','spock'];
 export const modeLabels={rps:'سنگ کاغذ قیچی',advanced:'دوئل پیشرفته',party:'پلم پولوم پلیچ'};
@@ -7,8 +8,7 @@ export const defaultNames=['آرش','ترانه','سامان','رها','نیما
 export const icons={rock:'✊',paper:'✋',scissors:'✌️',palm:'✋',back:'🤚',lizard:'🦎',spock:'🖖'};
 export const labels={rock:'سنگ',paper:'کاغذ',scissors:'قیچی',palm:'کف دست',back:'پشت دست',lizard:'مارمولک',spock:'اسپاک'};
 export const avatars=[{id:'red',name:'کلاه قرمزی',color:'#eb755c'},{id:'zizi',name:'زی‌زی‌گولو',color:'#a58ac8'},{id:'pesar',name:'پسرخاله',color:'#e0b65e'},{id:'guest',name:'مهمان دورهمی',color:'#78aaa5'}];
-export const fa=n=>n.toLocaleString('fa-IR-u-nu-arabext');
-export const persianDigits=text=>String(text).replace(/[0-9٠-٩]/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d.charCodeAt(0)-(d<='9'?48:1632)]).replace(/(?<=\d),(?=\d)/g,'٬');
+export const fa=n=>n.toLocaleString('fa-IR');
 export function outcome(a,b,mode='rps'){const valid=availableMoves(mode);if(!valid.includes(a)||!valid.includes(b))throw Error('Invalid move');return a===b?0:beats[a].includes(b)?1:-1;}
 export function uniqueLoser(choices){if(choices.length<3||choices.some(c=>!['palm','back'].includes(c)))throw Error('Invalid party choices');const palms=choices.flatMap((c,i)=>c==='palm'?[i]:[]);if(palms.length===1)return palms[0];if(palms.length===choices.length-1)return choices.findIndex(c=>c==='back');return -1;}
 export function createMatch(mode,players,rounds=3){if(!['rps','advanced','party'].includes(mode)||players.length<(mode==='party'?3:2)||players.length>(mode==='party'?8:2)||!players.some(p=>!p.bot))throw Error('Invalid players');if(![1,3,5,7,9].includes(rounds))throw Error('Invalid rounds');return{mode,rounds,players:players.map((p,i)=>({...p,id:i,active:true,wins:0,streak:0,score:0})),round:1,decisive:0,winner:null,history:[]};}
@@ -18,3 +18,11 @@ export function resolve(match,choices){if(match.winner!==null)throw Error('Match
   if(match.winner!==null)match.players.find(p=>p.id===match.winner).score+=200;
   match.history.push({round:match.round,choices:{...choices},eliminated:eliminated?.id??null});return{message,eliminated,finished:match.winner!==null};}
 export function cleanSave(value){const valid=r=>r&&['rps','advanced','party'].includes(r.mode)&&typeof r.name==='string'&&r.name.length<=24&&Number.isSafeInteger(r.score)&&r.score>=0&&r.score<=1000000&&Number.isSafeInteger(r.rounds)&&r.rounds>0;const records=(Array.isArray(value?.records)?value.records:[]).filter(valid).map(r=>({mode:r.mode,name:r.name,score:r.score,rounds:r.rounds}));return{version:2,records:['rps','advanced','party'].flatMap(mode=>records.filter(r=>r.mode===mode).sort((a,b)=>b.score-a.score).slice(0,10))};}
+
+export function resolveRound(match,choices){
+    const before=match.players.map(p=>({wins:p.wins,score:p.score}));
+    const result=resolve(match,choices);
+    const scorer=match.players.find(p=>p.wins>before[p.id].wins);
+    const championBonus=scorer&&match.winner===scorer.id?200:0;
+    return {message:result.message,round:match.round,winnerId:scorer?.id??null,eliminatedId:result.eliminated?.id??null,tie:!scorer&&!result.eliminated,points:scorer?scorer.score-before[scorer.id].score-championBonus:0,championBonus};
+}
